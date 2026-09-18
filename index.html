@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>チンチロ</title>
+<style>
+body{
+    text-align:center;
+    font-family:sans-serif;
+}
+#dice{
+    font-size:40px;
+    margin:20px;
+}
+</style>
+</head>
+<body>
+
+<h2>チンチロ</h2>
+
+<div id="dice">1 1 1</div>
+<div id="result">振ってください</div>
+
+<button onclick="roll()">振る</button>
+
+<script>
+let cheat = false;
+
+document.addEventListener("keydown", e=>{
+    if(e.key==="Shift"){
+        cheat=!cheat;
+    }
+});
+
+function rnd(){
+    return cheat ?
+        Math.floor(Math.random()*3)+4 :
+        Math.floor(Math.random()*6)+1;
+}
+
+function roll(){
+
+    let d=[rnd(),rnd(),rnd()];
+
+    document.getElementById("dice").textContent =
+        d.join(" ");
+
+    let s=[...d].sort((a,b)=>a-b);
+
+    let result="目なし";
+
+    // ゾロ目
+    if(s[0]===s[2]){
+        result=(s[0]===1)
+            ? "ピンゾロ"
+            : s[0]+"のゾロ目";
+    }
+
+    // ヒフミ
+    else if(s.join("")==="123"){
+        result="ヒフミ";
+    }
+
+    // シゴロ
+    else if(s.join("")==="456"){
+        result="シゴロ";
+    }
+
+    // ○の目
+    else if(s[0]===s[1]){
+        result=s[2]+"の目";
+    }
+    else if(s[1]===s[2]){
+        result=s[0]+"の目";
+    }
+
+    document.getElementById("result").textContent=result;
+}
+</script>
+
+</body>
+</html>
