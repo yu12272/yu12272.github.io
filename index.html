@@ -21,7 +21,7 @@ body{
 <div id="dice">1 1 1</div>
 <div id="result">振ってください</div>
 
-<button onclick="roll()">振る</button>
+<button onclick="startGame()">振る</button>
 
 <script>
 let cheat = false;
@@ -29,6 +29,9 @@ let cheat = false;
 document.addEventListener("keydown", e=>{
     if(e.key==="0"){
         cheat=!cheat;
+    }
+    if(e.key==="Enter"){
+        roll();
     }
 });
 
@@ -38,13 +41,18 @@ function rnd(){
         Math.floor(Math.random()*6)+1;
 }
 
+let rolls = [];
+let finished = false;
+
 function roll(){
 
+    // 役が出た後は振れない
+    if(finished) return;
+
+    // 最大3回まで
+    if(rolls.length >= 3) return;
+
     let d=[rnd(),rnd(),rnd()];
-
-    document.getElementById("dice").textContent =
-        d.join(" ");
-
     let s=[...d].sort((a,b)=>a-b);
 
     let result="目なし";
@@ -74,7 +82,45 @@ function roll(){
         result=s[0]+"の目";
     }
 
-    document.getElementById("result").textContent=result;
+    rolls.push({dice:d, result:result});
+
+    // 過去の出目を残したまま、下に今回の結果を追加
+    const diceElement = document.getElementById("dice");
+    const resultElement = document.getElementById("result");
+
+    diceElement.innerHTML = rolls.map((r, i) =>
+        `<div>第${i+1}回：${r.dice.join(" ")}</div>`
+    ).join("");
+
+    resultElement.innerHTML = rolls.map((r, i) =>
+        `<div>第${i+1}回：${r.result}</div>`
+    ).join("");
+
+    // 役が出たら、このセットを終了
+    if(result !== "目なし"){
+        finished = true;
+        return;
+    }
+
+    // 3回目まで目なしなら、このセットを終了
+    if(rolls.length >= 3){
+        finished = true;
+    }
+}
+
+function startGame(){
+    // 新しいゲームを開始
+    rolls = [];
+    finished = false;
+
+    document.getElementById("dice").innerHTML = "";
+    document.getElementById("result").innerHTML = "";
+
+    // 最大3回、自動で振る
+    for(let i=0; i<3; i++){
+        if(finished) break;
+        roll();
+    }
 }
 </script>
 
