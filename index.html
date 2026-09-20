@@ -8,7 +8,6 @@
 
     <title>マイページ一覧</title>
 
-    <!-- CSSファイルを読み込む -->
     <link rel="stylesheet" href="index_style.css">
 </head>
 
@@ -20,34 +19,19 @@
     </header>
 
     <main>
-        <!-- リンク一覧を自動生成 -->
         <div id="page-list" class="page-list"></div>
     </main>
 
     <script>
 
-        // ====================================
-        // ページ一覧
-        // 新しいページはここに追加
-        // ====================================
-
         const pages = [
 
             {
-                name: "チンチロゲーム",
-                file: "chinchiro.html",
-            },
-
-            {
-                name: "キャラクターシート",
+                name: "マジスタキャラシ",
                 file: "character-sheet.html",
             }
 
         ];
-
-        // ====================================
-        // リンクを自動生成
-        // ====================================
 
         const pageList = document.getElementById("page-list");
 
