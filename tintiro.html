@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>チンチロ</title>
+<style>
+body{
+    text-align:center;
+    font-family:sans-serif;
+}
+#dice{
+    font-size:40px;
+    margin:20px;
+}
+</style>
+</head>
+<body>
+
+<h2>チンチロ</h2>
+
+<div id="dice">1 1 1</div>
+<div id="result">振ってください</div>
+
+<button onclick="startGame()">振る</button>
+
+<script>
+let cheat = false;
+
+document.addEventListener("keydown", e=>{
+    if(e.key==="0"){
+        cheat=!cheat;
+    }
+    if(e.key==="Enter"){
+        roll();
+    }
+});
+
+function rnd(){
+    return cheat ?
+        Math.floor(Math.random()*3)+4 :
+        Math.floor(Math.random()*6)+1;
+}
+
+let rolls = [];
+let finished = false;
+
+function roll(){
+
+    // 役が出た後は振れない
+    if(finished) return;
+
+    // 最大3回まで
+    if(rolls.length >= 3) return;
+
+    let d=[rnd(),rnd(),rnd()];
+    let s=[...d].sort((a,b)=>a-b);
+
+    let result="目なし";
+
+    // ゾロ目
+    if(s[0]===s[2]){
+        result=(s[0]===1)
+            ? "ピンゾロ"
+            : s[0]+"のゾロ目";
+    }
+
+    // ヒフミ
+    else if(s.join("")==="123"){
+        result="ヒフミ";
+    }
+
+    // シゴロ
+    else if(s.join("")==="456"){
+        result="シゴロ";
+    }
+
+    // ○の目
+    else if(s[0]===s[1]){
+        result=s[2]+"の目";
+    }
+    else if(s[1]===s[2]){
+        result=s[0]+"の目";
+    }
+
+    rolls.push({dice:d, result:result});
+
+    // 過去の出目を残したまま、下に今回の結果を追加
+    const diceElement = document.getElementById("dice");
+    const resultElement = document.getElementById("result");
+
+    diceElement.innerHTML = rolls.map((r, i) =>
+        `<div>第${i+1}回：${r.dice.join(" ")}</div>`
+    ).join("");
+
+    resultElement.innerHTML = rolls.map((r, i) =>
+        `<div>第${i+1}回：${r.result}</div>`
+    ).join("");
+
+    // 役が出たら、このセットを終了
+    if(result !== "目なし"){
+        finished = true;
+        return;
+    }
+
+    // 3回目まで目なしなら、このセットを終了
+    if(rolls.length >= 3){
+        finished = true;
+    }
+}
+
+function startGame(){
+    // 新しいゲームを開始
+    rolls = [];
+    finished = false;
+
+    document.getElementById("dice").innerHTML = "";
+    document.getElementById("result").innerHTML = "";
+
+    // 最大3回、自動で振る
+    for(let i=0; i<3; i++){
+        if(finished) break;
+        roll();
+    }
+}
+</script>
+
+</body>
+</html>
