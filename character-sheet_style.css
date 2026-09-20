@@ -52,7 +52,7 @@ h1 {
 }
 main {
     display:grid;
-    gap:18px;
+    gap:5px;
     margin-bottom:48px
 }
 section,.toolbar {
@@ -343,7 +343,7 @@ details {
 }
 
 details + details {
-    margin-top: 18px;
+    margin-top: 5px;
 }
 
 summary {
