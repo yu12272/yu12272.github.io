@@ -241,6 +241,7 @@ th {
 .magic-options {
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    margin-top: 12px;
     gap:8px
 }
 
