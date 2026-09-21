@@ -354,12 +354,8 @@ function cocofolia(){
     let ts=actionData('.technique'),ws=actionData('.weapon');
     if(ts.length)lines.push('// 技');
     ts.forEach(t=>{
-        lines.push(`${cmd}<=${
-            refExpr(t.ref,t.mult,t.add)
-        } 
-        【${t.name||'名称未設定'}】`);
-        if(t.damage)lines.push(`${t.damage} 
-            【${t.name||'名称未設定'}・ダメージ】`)
+        lines.push(`${cmd}<=${refExpr(t.ref,t.mult,t.add)} 【${t.name||'名称未設定'}】`);
+        if(t.damage)lines.push(`${t.damage} 【${t.name||'名称未設定'}・ダメージ】`)
         }
     );
     if(ws.length)lines.push('// 武器');
