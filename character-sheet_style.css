@@ -1,6 +1,6 @@
 :root {
     --bg:#f6f4ef;
-    --panel:rgba(255,255,255,.9);
+    --panel:rgba(255,255,255);
     --ink:#252525;
     --muted:#6f6a60;
     --line:#ded4c8;
@@ -17,7 +17,7 @@
 body {
     margin:0;
     font-family:"Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;
-    background:radial-gradient(circle at 9% 7%,rgba(255,213,111,.45),transparent 28%),radial-gradient(circle at 87% 5%,rgba(184,154,255,.5),transparent 30%),linear-gradient(135deg,#fbf4e8,#f6f4ef 48%,#f0eaff);
+    background:rgb(38, 30, 51);
     color:var(--ink);
     line-height:1.6
 }
@@ -30,7 +30,7 @@ header {
     margin-bottom:14px;
     padding:30px 22px;
     text-align:center;
-    background:rgba(255,255,255,.62);
+    background:rgba(255,255,255);
     border:1px solid var(--line);
     border-radius:28px;
     box-shadow:var(--shadow)
