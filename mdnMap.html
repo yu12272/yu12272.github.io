@@ -39,7 +39,7 @@ button:hover{filter:brightness(.96)}button.primary{background:var(--accent);colo
 <main class="layout">
 <section class="panel map-area">
 <h2>マップ</h2>
-<div class="map-toolbar"><button class="primary" id="randomBtn">ランダム配置</button><button id="resetBtn">リセット</button><button id="clearBtn">全消去</button><button id="unlockBtn">固定解除</button></div>
+<div class="map-toolbar"><button class="primary" id="randomBtn">ランダム配置</button><button id="resetBtn">リセット</button><button id="clearBtn">全消去</button><button id="unlockBtn">固定解除</button><button id="exportBtn">画像出力</button></div>
 <div id="map" class="map"></div>
 <div class="meta">部屋一覧→マップ：配置　／　配置済みの部屋をドラッグ：移動　／　ダブルクリック：固定　／　右クリック：削除</div>
 <div id="status" class="status"></div>
@@ -82,11 +82,104 @@ if(dragSource.kind==="cell"){const from=dragSource.index;if(from===target)return
 const id=dragSource.id,t=typeOf(id);if(cells[target]?.fixed){status("固定されたマスには配置できません");return}if(countUsed(id)>=t.count&&cells[target]?.id!==id){status(`${t.name}は上限数に達しています`);return}cells[target]={id,fixed:false};selectedIndex=target;renderAll();status(`${t.name}を配置しました`)}
 function defaultMap(){cells=Array(TOTAL).fill(null);const i=(ROWS-1)*COLS+3;cells[i]={id:"start",fixed:true};selectedIndex=i}
 function randomize(){const fixed=cells.map(r=>r&&r.fixed?r:null),next=Array(TOTAL).fill(null);fixed.forEach((r,i)=>{if(r)next[i]=r});let rest=[];roomTypes.forEach(t=>{for(let n=next.filter(r=>r&&r.id===t.id).length;n<t.count;n++)rest.push({id:t.id,fixed:false})});const slots=next.map((r,i)=>r?null:i).filter(i=>i!==null);for(let i=rest.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[rest[i],rest[j]]=[rest[j],rest[i]]}slots.forEach((i,n)=>next[i]=rest[n]);cells=next;selectedIndex=null;renderAll();status("固定されていない部屋をランダム配置しました")}
+
+function exportMapImage(){
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const cellW = 180;
+    const cellH = 140;
+    const gap = 8;
+    const padding = 24;
+    const titleHeight = 46;
+    canvas.width =COLS * cellW +(COLS - 1) * gap +padding * 2;
+    canvas.height =ROWS * cellH +(ROWS - 1) * gap +padding * 2 +titleHeight;
+    ctx.fillStyle = "#ffffff";ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#1f2937";
+    ctx.font = "bold 24px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("マップ",padding,32);
+    const colors = {
+        start: "#bbf7d0",
+        battle: "#fecaca",
+
+        "boss-a": "#ddd6fe",
+        "boss-b": "#c4b5fd",
+        "boss-c": "#e9d5ff",
+        "boss-d": "#f3e8ff",
+
+        item: "#fef3c7",
+        emotion: "#fbcfe8",
+
+        normal: "#dbeafe"
+    };
+
+    const borders = {
+        start: "#16a34a",
+        battle: "#ef4444",
+
+        "boss-a": "#7c3aed",
+        "boss-b": "#6d28d9",
+        "boss-c": "#9333ea",
+        "boss-d": "#a855f7",
+
+        item: "#d97706",
+        emotion: "#db2777",
+
+        normal: "#2563eb"
+    };
+
+    cells.forEach((room, index) => {
+        const row = Math.floor(index / COLS);
+        const col = index % COLS;
+        const x =padding +col * (cellW + gap);
+        const y =padding +titleHeight +row * (cellH + gap);
+        ctx.fillStyle = room? (colors[room.id] || "#e2e8f0"): "#f8fafc";
+        ctx.strokeStyle = room? (borders[room.id] || "#64748b"): "#cbd5e1";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(x,y,cellW,cellH,10);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#64748b";
+        ctx.font = "14px sans-serif";
+        ctx.textAlign = "left";
+
+        ctx.fillText(String(index + 1),x + 9,y + 20);
+        if (room) {
+            const type = typeOf(room.id);
+            ctx.textAlign = "center";
+            ctx.font = "36px sans-serif";
+            if (type.icon) {
+                ctx.fillText(
+                    type.icon,
+                    x + cellW / 2,
+                    y + 57
+                );
+            }
+            ctx.fillStyle = "#1f2937";
+            ctx.font = "bold 18px sans-serif";
+            ctx.fillText(
+                type.name,
+                x + cellW / 2,
+                y + 91
+            );
+
+        }
+    });
+    const link = document.createElement("a");
+    link.download ="map_" +new Date().toISOString().slice(0, 10) +".png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    status("マップ画像を出力しました");
+}
+
+
 function renderAll(){renderMap();renderPalette();if(selectedIndex!==null)showDescription(selectedIndex)}
 document.getElementById("randomBtn").onclick=randomize;
 document.getElementById("resetBtn").onclick=()=>{defaultMap();renderAll();status("初期配置に戻しました")};
 document.getElementById("clearBtn").onclick=()=>{cells=cells.map(r=>r&&r.fixed?r:null);selectedIndex=null;renderAll();status("固定以外を消去しました")};
 document.getElementById("unlockBtn").onclick=()=>{cells.forEach(r=>{if(r)r.fixed=false});renderAll();status("すべての固定を解除しました")};
+document.getElementById("exportBtn").onclick=exportMapImage;
 document.addEventListener("dragend",()=>{dragSource=null});
 defaultMap();renderAll();status("初期配置を作成しました");
 </script>
