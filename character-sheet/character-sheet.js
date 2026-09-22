@@ -1,5 +1,6 @@
 const KEY='trpgSheet_v4';
 let portraitData='';
+let currentMode = 'edit';
 
 const statOpts=[
     ['none','なし'],
@@ -179,13 +180,24 @@ function calculateAll(){
     msg('basicMagicMessage',bu>bt?'合計値を超えています。':bu<bt?`あと${bt-bu}点です。`:'一致しています。',bu>bt?'warning':bu===bt?'success':'note');
     let uc=N('uniqueMagicCount'),ch=document.querySelectorAll('[data-unique]:checked').length;
     uniqueMagicCountText.textContent=uc;msg('uniqueMagicMessage',ch>uc?'選択数超過です。':ch<uc?`あと${uc-ch}個です。`:'一致しています。',ch>uc?'warning':ch===uc?'success':'note');
-    document.querySelectorAll('[data-live-total]').forEach(
-        el=>{
-            let card=el.closest('.card'),
-            ref=card.querySelector('[data-field=ref]').value,mult=Number(card.querySelector('[data-field=mult]').value||1),
-            add=Number(card.querySelector('[data-field=add]').value||0);el.value=(ref==='none'?0:v[ref])*mult+add
-        }
-    )
+
+    document.querySelectorAll('[data-live-total]').forEach(el => {
+        const card = el.closest('.card');
+
+        if (!card) return;
+
+        const refInput = card.querySelector('[data-field="ref"]');
+        const multInput = card.querySelector('[data-field="mult"]');
+        const addInput = card.querySelector('[data-field="add"]');
+
+        if (!refInput || !multInput || !addInput) return;
+
+        const ref = refInput.value;
+        const mult = Number(multInput.value || 1);
+        const add = Number(addInput.value || 0);
+
+        el.value = (ref === 'none' ? 0 : v[ref]) * mult + add;
+    });
 }
             
 function roll(c,s){
@@ -224,18 +236,142 @@ function rollUniqueMagicCount(){
 function addUniqueMagicDetail(d={}){
     let c=document.createElement('div');
     c.className='card unique-detail';
-    c.innerHTML=`<div class="grid two"><div class="field"><label>魔法名</label><input data-field="magicName" value="${E(d.magicName||'')}"></div><div class="field"><label>魔法効果</label><textarea data-field="magicEffect">${E(d.magicEffect||'')}</textarea></div></div><button class="danger" onclick="this.closest('.card').remove()">削除</button>`;
+    c.innerHTML=`
+        <div class="grid two">
+            <div class="field">
+                <label>魔法名</label>
+                <input data-field="magicName" value="${E(d.magicName||'')}">
+            </div>
+            <div class="field">
+                <label>魔法効果</label>
+                <textarea data-field="magicEffect">${E(d.magicEffect||'')}
+                </textarea>
+            </div>
+        </div>
+        <button class="danger magic-delete" onclick="this.closest('.card').remove()">
+            削除
+        </button>`;
     uniqueMagicDetails.appendChild(c)
+    calculateAll();
 }
             
 
-function actionCard(type,d={}){
-    let c=document.createElement('div');
-    c.className=`card ${type}`;
-    let isTech=type==='technique';
-    c.innerHTML=`<div class="grid"><div class="field"><label>${isTech?'技':'武器'}の名前</label><input data-field="name" value="${E(d.name||'')}"></div><div class="field"><label>参照ステータス</label><select data-field="ref" onchange="calculateAll()">${options(d.ref||'none')}</select></div><div class="field"><label>倍率</label><input type="number" step="0.1" data-field="mult" value="${E(d.mult??'1')}" oninput="calculateAll()"></div><div class="field"><label>成功値への加算</label><input type="number" data-field="add" value="${E(d.add??'0')}" oninput="calculateAll()"></div><div class="field"><label>最終成功値</label><input data-live-total readonly></div><div class="field"><label>ダメージロール</label><input data-field="damage" value="${E(d.damage||'')}" placeholder="例：1d8+({筋力}/2)"></div>${isTech?`<div class="field"><label>消費MP</label><input type="number" min="0" data-field="mp" value="${E(d.mp||'')}"></div><div><label>維持MP</label><input type="number" min="0" data-field="maintainMp" value="${E(d.maintainMp||'')}"></div>`:''}</div><div class="field"><label>${isTech?'効果':'備考'}</label><textarea data-field="note">${E(d.note||'')}</textarea></div><button class="danger" onclick="this.closest('.card').remove()">削除</button>`;
-    (isTech?techniques:weapons).appendChild(c);
-    calculateAll()
+function actionCard(type, d = {}) {
+    let isTech = type === 'technique';
+
+    // 技の場合はdetails、武器の場合はdivを作成
+    let c = document.createElement(isTech ? 'details' : 'div');
+
+    c.className = `card ${type}`;
+
+    // 技は最初から開いた状態にする
+    if (isTech) {
+        c.open = true;
+    }
+
+    const techFields = isTech ? `
+        <div class="field">
+            <label>消費MP</label>
+            <input
+                type="number"
+                min="0"
+                data-field="mp"
+                value="${E(d.mp || '')}">
+        </div>
+
+        <div class="field">
+            <label>維持MP</label>
+            <input
+                type="number"
+                min="0"
+                data-field="maintainMp"
+                value="${E(d.maintainMp || '')}">
+        </div>
+    ` : '';
+
+    c.innerHTML = `
+        ${isTech ? `
+            <summary>
+                <span class="technique-summary-name">
+                    ${E(d.name || '技の設定')}
+                </span>
+            </summary>
+        ` : ''}
+
+        <div class="grid">
+
+            <div class="field">
+                <label>
+                    ${isTech ? '技' : '武器'}の名前
+                </label>
+                <input data-field="name" value="${E(d.name || '')}">
+            </div>
+
+            <div class="field view-hide-field">
+                <label>参照ステータス</label>
+                <select data-field="ref" onchange="calculateAll()">
+                    ${options(d.ref || 'none')}
+                </select>
+            </div>
+
+            <div class="field view-hide-field">
+                <label>倍率</label>
+                <input type="number" step="0.1" data-field="mult" value="${E(d.mult ?? '1')}" oninput="calculateAll()">
+            </div>
+
+            <div class="field view-hide-field">
+                <label>成功値への加算</label>
+                <input
+                    type="number"
+                    data-field="add"
+                    value="${E(d.add ?? '0')}"
+                    oninput="calculateAll()">
+            </div>
+
+            <div class="field">
+                <label>最終成功値</label>
+                <input data-live-total readonly>
+            </div>
+
+            <div class="field">
+                <label>ダメージロール</label>
+                <input
+                    data-field="damage"
+                    value="${E(d.damage || '')}"
+                    placeholder="例：1d8+({筋力}/2)">
+            </div>
+
+            ${techFields}
+
+        </div>
+
+        <div class="field">
+            <label>${isTech ? '効果' : '備考'}</label>
+            <textarea data-field="note">${E(d.note || '')}</textarea>
+        </div>
+
+        <button
+            class="danger action-delete view-hide-control"
+            onclick="this.closest('.card').remove()">
+            削除
+        </button>
+    `;
+
+    // 技または武器の一覧に追加
+    (isTech ? techniques : weapons).appendChild(c);
+
+    // 技名が入力されたら開閉タイトルも更新する
+    if (isTech) {
+        const nameInput = c.querySelector('[data-field="name"]');
+        const summaryName = c.querySelector('.technique-summary-name');
+
+        nameInput.addEventListener('input', () => {
+            summaryName.textContent =
+                nameInput.value.trim() || '技の設定';
+        });
+    }
+
+    calculateAll();
 }
             
 
@@ -442,12 +578,17 @@ function slots(){
     try{return JSON.parse(localStorage.getItem(KEY))||{}}catch{return {}}
 }
 
-function setSlots(s){
-    try{
-        localStorage.setItem(KEY,JSON.stringify(s))
-    }
-    catch{
-        msg('saveMessage','保存容量を超えました。JSON書き出しをご利用ください。','warning')
+function setSlots(s) {
+    try {
+        localStorage.setItem(KEY, JSON.stringify(s));
+        return true;
+    } catch {
+        msg(
+            'saveMessage',
+            '保存容量を超えました。JSON書き出しをご利用ください。',
+            'warning'
+        );
+        return false;
     }
 }
 
@@ -460,17 +601,29 @@ function refresh(sel){
     if(sel)saveSlot.value=sel
 }
 
-function createSlot(){
-    let n=newSlotName.value.trim()||`スロット${Object.keys(slots()).length+1}`,s=slots();
-    s[n]=collect();
-    setSlots(s);refresh(n);
-    msg('saveMessage',`「${n}」を作成しました。`,'success')
+function createSlot() {
+    const n =
+        newSlotName.value.trim() ||
+        `スロット${Object.keys(slots()).length + 1}`;
+
+    const s = slots();
+    s[n] = collect();
+
+    if (setSlots(s)) {
+        refresh(n);
+        msg('saveMessage', `「${n}」を作成しました。`, 'success');
+    }
 }
 
-function saveSheet(){
-    let n=saveSlot.value,s=slots();
-    s[n]=collect();setSlots(s);
-    msg('saveMessage',`「${n}」に保存しました。`,'success')
+function saveSheet() {
+    const n = saveSlot.value;
+    const s = slots();
+
+    s[n] = collect();
+
+    if (setSlots(s)) {
+        msg('saveMessage', `「${n}」に保存しました。`, 'success');
+    }
 }
 
 function loadSheet(){
@@ -503,6 +656,72 @@ function importJson(e){
     };
     if(e.target.files[0])r.readAsText(e.target.files[0])
 }
+
+function updateViewMode() {
+    const viewing = currentMode === 'view';
+
+    document.body.classList.toggle('view-mode', viewing);
+
+    editModeButton.classList.toggle('active', !viewing);
+    viewModeButton.classList.toggle('active', viewing);
+
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+    if (el.dataset.originalReadonly === undefined) {
+        el.dataset.originalReadonly = el.readOnly ? '1' : '0';
+    }
+
+    if (el.dataset.originalDisabled === undefined) {
+        el.dataset.originalDisabled = el.disabled ? '1' : '0';
+    }
+
+        if (viewing) {
+            if (el.id === 'cocDiceCommand') {
+                el.disabled = false;
+            } 
+            else if (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'file') {
+            el.disabled = true;
+            } 
+            else {
+                el.readOnly = true;
+            }
+        } 
+        else {
+            el.disabled = el.dataset.originalDisabled === '1';
+            el.readOnly = el.dataset.originalReadonly === '1';
+        }
+    });
+
+    document.querySelectorAll('#combatSkills tr, #searchSkills tr').forEach(row => {
+            const value = Number(row.querySelector('.calc')?.textContent || 0);
+
+            row.classList.toggle('view-hidden',viewing && value === 0);
+    });
+
+    document.querySelectorAll('#specialSkills tr').forEach(row => {
+        const total = Number(row.querySelector('.calc')?.textContent || 0);
+
+        row.classList.toggle('view-hidden', viewing && total === 0);
+    });
+
+    document.querySelectorAll('#uniqueMagicOptions .check-card').forEach(card => {
+        const checked = card.querySelector('[data-unique]')?.checked;
+
+        card.classList.toggle('view-hidden', viewing && !checked);
+    });
+
+
+    document.querySelectorAll(
+        '#uniqueMagicDetails .unique-detail'
+    ).forEach(card => {
+        card.classList.remove('view-hidden');
+    });
+}
+
+function setMode(mode) {
+    currentMode = mode === 'view' ? 'view' : 'edit';
+    updateViewMode();
+}
+
 
 render();
 addUniqueMagicDetail();

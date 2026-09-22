@@ -368,3 +368,244 @@ summary::before {
 details[open] summary::before {
     content: "−";
 }
+
+
+.mode-switch {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 4px;
+}
+
+.mode-label {
+    margin-right: 4px;
+    color: #fff;
+    font-weight: 700;
+}
+
+.mode-button {
+    margin: 0;
+}
+
+.mode-button.active {
+    background: linear-gradient(135deg, var(--main), #9b72ff);
+    color: #fff;
+    border-color: transparent;
+}
+
+body.view-mode #editModeButton {
+    background: #fff;
+    color: var(--main);
+    border: 1px solid var(--main);
+    box-shadow: none;
+}
+
+
+.view-hidden {
+    display: none !important;
+}
+
+body.view-mode main {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+body.view-mode .view-status {
+    grid-area: status;
+}
+
+
+body.view-mode .view-unique-magic {
+    grid-area: unique-magic;
+}
+
+body.view-mode .view-unique-detail {
+    grid-area: unique-detail;
+}
+
+body.view-mode .view-techniques {
+    grid-area: techniques;
+}
+
+body.view-mode .view-weapons {
+    grid-area: weapons;
+}
+
+body.view-mode .view-other {
+    grid-area: other;
+}
+
+body.view-mode .mode-switch {
+    display: flex !important;
+    grid-area: mode;
+}
+
+body.view-mode .toolbar {
+    display: grid !important;
+    grid-area: toolbar;
+}
+
+body.view-mode section button.view-keep {
+    display: inline-block !important;
+}
+
+body.view-mode input:not([type=checkbox]),
+body.view-mode select,
+body.view-mode textarea {
+    pointer-events: none;
+    border-color: var(--line);
+    background: #fffdf9;
+    box-shadow: none;
+}
+
+body.view-mode #cocDiceCommand {
+    pointer-events: auto;
+}
+
+body.view-mode #uniqueMagicOptions .check-card input {
+    display: none;
+}
+
+body.view-mode #uniqueMagicOptions .check-card {
+    background: var(--soft);
+    border-color: #dacdff;
+}
+
+body.view-mode summary {
+    cursor: default;
+}
+
+body.view-mode .view-basic {
+    grid-area: basic;
+}
+
+body.view-mode .view-cocofolia {
+    grid-area: cocofolia;
+}
+
+body.view-mode #statsGrid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 4px;
+}
+
+body.view-mode #combatSkillsTable th:nth-child(2),
+body.view-mode #combatSkillsTable td:nth-child(2),
+body.view-mode #searchSkillsTable th:nth-child(2),
+body.view-mode #searchSkillsTable td:nth-child(2) {
+    display: none;
+}
+
+body.view-mode #specialSkillsTable th:nth-child(2),
+body.view-mode #specialSkillsTable td:nth-child(2),
+body.view-mode #specialSkillsTable th:nth-child(3),
+body.view-mode #specialSkillsTable td:nth-child(3) {
+    display: none;
+}
+
+body.view-mode .view-hide-field,
+body.view-mode .view-hide-control {
+    display: none !important;
+}
+
+body.view-mode section,
+body.view-mode details,
+body.view-mode .card,
+body.view-mode table {
+    border-color: var(--line);
+}
+
+body.view-mode .technique,
+body.view-mode .weapon,
+body.view-mode .unique-detail {
+    border: 1px solid var(--line);
+    background: #fffdf9;
+    box-shadow: 0 2px 8px rgba(52,38,24,.06);
+}
+
+body.view-mode .portrait-delete {
+    display: none;
+}
+
+body.view-mode .action-delete,
+body.view-mode .magic-delete {
+    display: none;
+}
+
+
+body.view-mode main > details,
+body.view-mode main > section {
+    align-self: stretch;
+    width: 100%;
+    height: fit-content;
+    min-height: 0;
+}
+
+body.view-mode .view-column {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    min-width: 0;
+}
+
+body.view-mode .view-column > * {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    grid-area: auto !important;
+}
+
+.view-columns,
+.view-column {
+    display: contents;
+}
+
+body.view-mode .view-columns {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 1.4fr;
+    align-items: start;
+    gap: 8px;
+    width: 100%;
+}
+
+body.view-mode .view-column details {
+    height: fit-content;
+    min-height: 0;
+    align-self: stretch;
+}
+
+
+details.technique {
+    padding: 0 12px 12px;
+}
+
+details.technique > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+}
+
+details.technique > summary::before {
+    content: '▶';
+    font-size: 0.8rem;
+}
+
+details.technique[open] > summary::before {
+    content: '▼';
+}
+
+details.technique[open] > summary {
+    margin-bottom: 12px;
+}
+
+.technique-summary-name {
+    flex: 1;
+}
