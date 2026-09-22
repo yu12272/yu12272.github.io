@@ -409,7 +409,9 @@
                     return
                 }
                 const moving=cells[from];
-                cells[target]=moving;cells[from]=null;
+                const targetRoom=cells[target];
+                cells[target]=moving;
+                cells[from]=targetRoom;
                 selectedIndex=target;
                 renderAll();
                 return
