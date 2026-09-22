@@ -1,187 +1,545 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>マップ作成ツール</title>
-<style>
-:root{--bg:#eef1f5;--panel:#fff;--line:#cbd5e1;--text:#1f2937;--muted:#64748b;--accent:#4f46e5}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;font-family:"Yu Gothic","Meiryo",sans-serif;color:var(--text);background:var(--bg)}
-body{display:flex;flex-direction:column}
-header{flex:0 0 auto;padding:10px 18px;background:#277CFB;color:#6954E2;text-align:center;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px  1px 0 #fff,1px  1px 0 #fff;}
-header h1{margin:0 0 3px;font-size:32px} header p{margin:0;font-size:11px;opacity:.8}
-.layout{width:min(1450px,calc(100% - 20px));margin:10px auto 8px;display:grid;grid-template-columns:minmax(0,1fr) 285px;gap:10px;flex:1;min-height:0}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;box-shadow:0 2px 8px #0000000b;min-height:0}
-.panel h2{font-size:15px;margin:0 0 8px}
-.map-area{display:flex;flex-direction:column;min-width:0}
-.map-toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-button{border:0;border-radius:6px;padding:7px 9px;cursor:pointer;font-weight:bold;font-size:12px;background:#e2e8f0;color:#111827}
-button:hover{filter:brightness(.96)}button.primary{background:var(--accent);color:#fff}
-.map{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));gap:5px;flex:1;min-height:0;aspect-ratio:7/5}
-.cell{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:2px dashed #cbd5e1;border-radius:7px;background:#f8fafc;font-size:11px;padding:3px;cursor:grab;user-select:none;overflow:hidden;min-height:0}
-.cell:active{cursor:grabbing}.cell.drag-over{outline:3px solid #818cf8;background:#eef2ff}.cell.selected{box-shadow:inset 0 0 0 3px #111827}.cell.fixed::after{content:"🔒";position:absolute;right:2px;top:1px;font-size:10px}
-.cell-number{position:absolute;left:3px;top:1px;color:#0008;font-size:9px}.cell-icon{font-size:23px;line-height:1.1}.cell-label{font-weight:bold;line-height:1.2;overflow-wrap:anywhere}
-.cell[data-type=start]{background:#bbf7d0;border-color:#16a34a}.cell[data-type=battle]{background:#fecaca;border-color:#ef4444}.cell[data-type="boss-a"]{background:#ddd6fe;border-color:#7c3aed}.cell[data-type="boss-b"]{background:#c4b5fd;border-color:#6d28d9}.cell[data-type="boss-c"]{background:#e9d5ff;border-color:#9333ea}.cell[data-type="boss-d"]{background:#f3e8ff;border-color:#a855f7}.cell[data-type=item]{background:#fef3c7;border-color:#d97706}.cell[data-type=emotion]{background:#fbcfe8;border-color:#db2777}.cell[data-type=normal]{background:#dbeafe;border-color:#2563eb}
-.palette{display:flex;flex-direction:column;gap:5px;overflow:auto;min-height:0}
-.palette-title{font-size:11px;color:var(--muted);margin:4px 0 0;font-weight:bold}
-.room-card{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:7px;padding:6px;cursor:grab;background:#fff;min-height:37px}
-.room-card:active{cursor:grabbing}.room-icon{font-size:21px;width:28px;text-align:center}.room-info{min-width:0;flex:1}.room-name{font-weight:bold;font-size:12px}.room-count{color:var(--muted);font-size:10px}
-.description{width:min(1450px,calc(100% - 20px));margin:0 auto 10px;flex:0 0 125px}
-.description-box{height:75px;border:1px solid var(--line);border-radius:7px;padding:8px;background:#f8fafc;overflow:hidden}
-.description-box h3{margin:0 0 4px;font-size:14px}.description-box p{margin:3px 0;font-size:16px;white-space:pre-wrap}
-.meta{margin-top:5px;color:var(--muted);font-size:10px}.status{margin-top:6px;padding:6px;border-radius:6px;background:#f1f5f9;font-size:10px}
-@media(max-width:850px){html,body{overflow:auto}.layout{grid-template-columns:1fr;flex:none}.map-area{min-height:470px}.palette{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.description{flex:none}}
-</style>
-</head>
-<body>
-<header><h1>マップ作成ツール</h1></header>
-<main class="layout">
-<section class="panel map-area">
-<h2>マップ</h2>
-<div class="map-toolbar"><button class="primary" id="randomBtn">ランダム配置</button><button id="resetBtn">リセット</button><button id="clearBtn">全消去</button><button id="unlockBtn">固定解除</button><button id="exportBtn">画像出力</button></div>
-<div id="map" class="map"></div>
-<div class="meta">部屋一覧→マップ：配置　／　配置済みの部屋をドラッグ：移動　／　ダブルクリック：固定　／　右クリック：削除</div>
-<div id="status" class="status"></div>
-</section>
-<aside class="panel" style="display:flex;flex-direction:column"><h2>部屋一覧</h2><div id="palette" class="palette"></div></aside>
-</main>
-<section class="panel description"><h2>部屋の説明</h2><div id="description" class="description-box"><h3>未選択</h3><p>マップ上の部屋をクリックすると説明が表示されます。</p></div></section>
-<script>
-const ROWS=5,COLS=7,TOTAL=35;
-const roomTypes=[
-{id:"start",name:"スタート",count:1,icon:"🚩",description:"スタート地点かつゴール地点 PDF15p参照"},
-{id:"battle",name:"戦闘部屋",count:8,icon:"⚔️",description:"敵との戦闘が発生 PDF12~15p参照"},
-{id:"boss-a",name:"ボス部屋",count:1,icon:"🔫",description:"「カスパール」との戦闘部屋 PDF7p参照"},
-{id:"boss-b",name:"ボス部屋",count:1,icon:"🌹",description:"「アガミット」との戦闘部屋 PDF8p参照"},
-{id:"boss-c",name:"ボス部屋",count:1,icon:"🐺",description:"「わるいおおかみ」との戦闘部屋 PDF9p参照"},
-{id:"boss-d",name:"ボス部屋",count:1,icon:"🐻",description:"「森のくまさん」との戦闘部屋 PDF10p参照"},
-{id:"item",name:"アイテム部屋",count:6,icon:"🎁",description:"アイテムを入手できる部屋 PDF15p参照"},
-{id:"emotion",name:"感情値部屋",count:6,icon:"💗",description:"読むと感情値が上昇するテキストがある部屋 PDF15p参照"},
-{id:"normal",name:"その他",count:10,icon:"",description:"何もない部屋"}
-];
-let cells=Array(TOTAL).fill(null),selectedIndex=null,dragSource=null;
-const mapEl=document.getElementById("map"),paletteEl=document.getElementById("palette"),descriptionEl=document.getElementById("description"),statusEl=document.getElementById("status");
-const typeOf=id=>roomTypes.find(r=>r.id===id);
-const labelOf=r=>r?typeOf(r.id).name:"";
-const countUsed=id=>cells.filter(r=>r&&r.id===id).length;
-function status(msg=""){statusEl.textContent=(msg?msg+"　":"")+roomTypes.map(t=>`${t.name}:${countUsed(t.id)}/${t.count}`).join("　")}
-function showDescription(i){const r=cells[i];if(!r){descriptionEl.innerHTML=`<h3>空きマス（${i+1}番）</h3><p>このマスには部屋がありません。右側からドラッグして配置できます。</p>`;return}const t=typeOf(r.id);descriptionEl.innerHTML=`<h3>${t.icon} ${t.name}</h3><p>${t.description}</p>`}
-function renderPalette(){paletteEl.innerHTML="";roomTypes.forEach(t=>{const card=document.createElement("div");card.className="room-card";card.draggable=true;card.innerHTML=`<div class="room-icon">${t.icon}</div><div class="room-info"><div class="room-name">${t.name}</div><div class="room-count">${countUsed(t.id)} / ${t.count} 配置済み</div></div>`;card.addEventListener("dragstart",e=>{dragSource={kind:"palette",id:t.id};e.dataTransfer.setData("text/plain",t.id)});paletteEl.appendChild(card)})}
-function renderMap(){mapEl.innerHTML="";cells.forEach((r,i)=>{const c=document.createElement("div");c.className="cell";c.dataset.index=i;c.draggable=!!r;if(r){c.dataset.type=r.id;if(r.fixed)c.classList.add("fixed");if(selectedIndex===i)c.classList.add("selected")}c.innerHTML=`<span class="cell-number">${i+1}</span>${r?`<span class="cell-icon">${typeOf(r.id).icon}</span><span class="cell-label">${labelOf(r)}</span>`:""}`;
-c.addEventListener("click",()=>{selectedIndex=i;showDescription(i);renderMap()});
-c.addEventListener("dblclick",()=>{if(r){r.fixed=!r.fixed;status(r.fixed?"部屋を固定しました":"固定を解除しました");renderMap();showDescription(i)}});
-c.addEventListener("contextmenu",e=>{e.preventDefault();if(!r)return;if(r.fixed){status("固定された部屋は削除できません");return}cells[i]=null;renderAll();status("部屋を削除しました")});
-c.addEventListener("dragstart",e=>{if(!r||r.fixed){e.preventDefault();return}dragSource={kind:"cell",index:i};e.dataTransfer.setData("text/plain",String(i))});
-c.addEventListener("dragover",e=>{e.preventDefault();c.classList.add("drag-over")});
-c.addEventListener("dragleave",()=>c.classList.remove("drag-over"));
-c.addEventListener("drop",e=>{e.preventDefault();c.classList.remove("drag-over");dropOn(i)});
-mapEl.appendChild(c)})}
-function dropOn(target){if(!dragSource)return;
-if(dragSource.kind==="cell"){const from=dragSource.index;if(from===target)return;if(cells[target]?.fixed){status("移動先が固定されています");return}const moving=cells[from];cells[target]=moving;cells[from]=null;selectedIndex=target;renderAll();status("部屋を移動しました");return}
-const id=dragSource.id,t=typeOf(id);if(cells[target]?.fixed){status("固定されたマスには配置できません");return}if(countUsed(id)>=t.count&&cells[target]?.id!==id){status(`${t.name}は上限数に達しています`);return}cells[target]={id,fixed:false};selectedIndex=target;renderAll();status(`${t.name}を配置しました`)}
-function defaultMap(){cells=Array(TOTAL).fill(null);const i=(ROWS-1)*COLS+3;cells[i]={id:"start",fixed:true};selectedIndex=i}
-function randomize(){const fixed=cells.map(r=>r&&r.fixed?r:null),next=Array(TOTAL).fill(null);fixed.forEach((r,i)=>{if(r)next[i]=r});let rest=[];roomTypes.forEach(t=>{for(let n=next.filter(r=>r&&r.id===t.id).length;n<t.count;n++)rest.push({id:t.id,fixed:false})});const slots=next.map((r,i)=>r?null:i).filter(i=>i!==null);for(let i=rest.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[rest[i],rest[j]]=[rest[j],rest[i]]}slots.forEach((i,n)=>next[i]=rest[n]);cells=next;selectedIndex=null;renderAll();status("固定されていない部屋をランダム配置しました")}
-
-function exportMapImage(){
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const cellW = 180;
-    const cellH = 140;
-    const gap = 8;
-    const padding = 24;
-    const titleHeight = 46;
-    canvas.width =COLS * cellW +(COLS - 1) * gap +padding * 2;
-    canvas.height =ROWS * cellH +(ROWS - 1) * gap +padding * 2 +titleHeight;
-    ctx.fillStyle = "#ffffff";ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "#1f2937";
-    ctx.font = "bold 24px sans-serif";
-    ctx.textAlign = "left";
-    ctx.fillText("マップ",padding,32);
-    const colors = {
-        start: "#bbf7d0",
-        battle: "#fecaca",
-
-        "boss-a": "#ddd6fe",
-        "boss-b": "#c4b5fd",
-        "boss-c": "#e9d5ff",
-        "boss-d": "#f3e8ff",
-
-        item: "#fef3c7",
-        emotion: "#fbcfe8",
-
-        normal: "#dbeafe"
-    };
-
-    const borders = {
-        start: "#16a34a",
-        battle: "#ef4444",
-
-        "boss-a": "#7c3aed",
-        "boss-b": "#6d28d9",
-        "boss-c": "#9333ea",
-        "boss-d": "#a855f7",
-
-        item: "#d97706",
-        emotion: "#db2777",
-
-        normal: "#2563eb"
-    };
-
-    cells.forEach((room, index) => {
-        const row = Math.floor(index / COLS);
-        const col = index % COLS;
-        const x =padding +col * (cellW + gap);
-        const y =padding +titleHeight +row * (cellH + gap);
-        ctx.fillStyle = room? (colors[room.id] || "#e2e8f0"): "#f8fafc";
-        ctx.strokeStyle = room? (borders[room.id] || "#64748b"): "#cbd5e1";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.roundRect(x,y,cellW,cellH,10);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#64748b";
-        ctx.font = "14px sans-serif";
-        ctx.textAlign = "left";
-
-        ctx.fillText(String(index + 1),x + 9,y + 20);
-        if (room) {
-            const type = typeOf(room.id);
-            ctx.textAlign = "center";
-            ctx.font = "36px sans-serif";
-            if (type.icon) {
-                ctx.fillText(
-                    type.icon,
-                    x + cellW / 2,
-                    y + 57
-                );
-            }
-            ctx.fillStyle = "#1f2937";
-            ctx.font = "bold 18px sans-serif";
-            ctx.fillText(
-                type.name,
-                x + cellW / 2,
-                y + 91
-            );
-
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>マップ作成ツール</title>
+        
+        <style>
+        :root{
+            --bg:#eef1f5;
+            --panel:#fff;
+            --line:#cbd5e1;
+            --text:#1f2937;
+            --muted:#64748b;
+            --accent:#4f46e5
         }
-    });
-    const link = document.createElement("a");
-    link.download ="map_" +new Date().toISOString().slice(0, 10) +".png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-    status("マップ画像を出力しました");
-}
+        *{box-sizing:border-box}
+        html,body{
+            margin:0;
+            height:100%;
+            overflow:
+            hidden;
+            font-family:"Yu Gothic","Meiryo",sans-serif;
+            color:var(--text);
+            background:var(--bg)
+        }
+        
+        body{display:flex;flex-direction:column}
+        
+        header{
+            flex:0 0 auto;padding:10px 18px;
+            background:#277CFB;
+            color:#6954E2;text-align:center;
+            text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px  1px 0 #fff,1px  1px 0 #fff;
+        }
+        
+        header h1{margin:0 0 3px;font-size:32px} header p{margin:0;font-size:11px;opacity:.8}
+        
+        .layout{
+            width:min(1450px,calc(100% - 20px));
+            margin:10px auto 8px;
+            display:grid;
+            grid-template-columns:minmax(0,1fr) 285px;
+            gap:10px;
+            flex:1;
+            min-height:0
+        }
+        
+        .panel{
+            background:var(--panel);
+            border:1px solid var(--line);
+            border-radius:10px;
+            padding:10px;
+            box-shadow:0 2px 8px #0000000b;
+            min-height:0
+        }
+        
+        .panel h2{
+            font-size:15px;
+            margin:0 0 8px
+        }
 
+        .map-area{
+            display:flex;
+            flex-direction:column;
+            min-width:0
+        }
+        
+        .map-toolbar{
+            display:flex;
+            gap:6px;
+            flex-wrap:wrap;
+            margin-bottom:8px
+        }
+        
+        button{
+            border:0;
+            border-radius:6px;
+            padding:7px 9px;
+            cursor:pointer;
+            font-weight:bold;
+            font-size:12px;
+            background:#e2e8f0;color:#111827
+        }
+        
+        button:hover{
+            filter:brightness(.96)
+        }
+        button.primary{
+            background:var(--accent);
+            color:#fff
+        }
+        
+        .map{
+            display:grid;
+            grid-template-columns:repeat(7,minmax(0,1fr));
+            grid-template-rows:repeat(5,minmax(0,1fr));
+            gap:5px;flex:1;
+            min-height:0;
+            aspect-ratio:7/5
+        }
+        
+        .cell{
+            position:relative;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+            border:2px dashed #cbd5e1;
+            border-radius:7px;
+            background:#f8fafc;font-size:11px;
+            padding:3px;cursor:grab;
+            user-select:none;
+            overflow:hidden;
+            min-height:0
+        }
 
-function renderAll(){renderMap();renderPalette();if(selectedIndex!==null)showDescription(selectedIndex)}
-document.getElementById("randomBtn").onclick=randomize;
-document.getElementById("resetBtn").onclick=()=>{defaultMap();renderAll();status("初期配置に戻しました")};
-document.getElementById("clearBtn").onclick=()=>{cells=cells.map(r=>r&&r.fixed?r:null);selectedIndex=null;renderAll();status("固定以外を消去しました")};
-document.getElementById("unlockBtn").onclick=()=>{cells.forEach(r=>{if(r)r.fixed=false});renderAll();status("すべての固定を解除しました")};
-document.getElementById("exportBtn").onclick=exportMapImage;
-document.addEventListener("dragend",()=>{dragSource=null});
-defaultMap();renderAll();status("初期配置を作成しました");
-</script>
-</body>
+        .cell:active{
+            cursor:grabbing
+        }
+        .cell.drag-over{
+            outline:3px solid #818cf8;
+            background:#eef2ff
+        }
+        .cell.selected{
+            box-shadow:inset 0 0 0 3px #111827
+        }
+        .cell.fixed::after{
+            content:"🔒";
+            position:absolute;
+            right:2px;
+            top:1px;
+            font-size:10px
+        }
+        
+        .cell-number{
+            position:absolute;
+            left:3px;
+            top:1px;
+            color:#0008;
+            font-size:9px
+        }
+        .cell-icon{
+            font-size:23px;
+            line-height:1.1
+        }
+        .cell-label{
+            font-weight:bold;
+            line-height:1.2;
+            overflow-wrap:anywhere
+        }
+        
+        .cell[data-type=start]{
+            background:#bbf7d0;border-color:#16a34a
+        }
+        .cell[data-type=battle]{
+            background:#fecaca;
+            border-color:#ef4444
+        }
+        .cell[data-type="boss-a"]{
+            background:#ddd6fe;
+            border-color:#7c3aed
+        }
+        .cell[data-type="boss-b"]{
+            background:#c4b5fd;
+            border-color:#6d28d9
+        }
+        .cell[data-type="boss-c"]{
+            background:#e9d5ff;
+            border-color:#9333ea
+        }
+        .cell[data-type="boss-d"]{
+            background:#f3e8ff;
+            border-color:#a855f7
+        }
+        .cell[data-type=item]{
+            background:#fef3c7;
+            border-color:#d97706
+        }
+        .cell[data-type=emotion]{
+            background:#fbcfe8;
+            border-color:#db2777
+        }
+        .cell[data-type=normal]{
+            background:#dbeafe;
+            border-color:#2563eb
+        }
+
+        .palette{
+            display:flex;
+            flex-direction:column;
+            gap:5px;
+            overflow:auto;
+            min-height:0
+        }
+
+        .palette-title{
+            font-size:11px;
+            color:var(--muted);
+            margin:4px 0 0;
+            font-weight:bold
+        }
+
+        .room-card{
+            display:flex;
+            align-items:center;
+            gap:7px;
+            border:1px solid var(--line);
+            border-radius:7px;
+            padding:6px;
+            cursor:grab;
+            background:#fff;min-height:37px
+        }
+
+        .room-card:active{
+            cursor:grabbing
+        }
+        .room-icon{
+            font-size:21px;
+            width:28px;
+            text-align:center
+        }
+        .room-info{
+            min-width:0;
+            flex:1
+        }
+        .room-name{
+            font-weight:bold;
+            font-size:12px
+        }
+        .room-count{
+            color:var(--muted);
+            font-size:10px
+        }
+
+        .description{
+            width:min(1450px,calc(100% - 20px));
+            margin:0 auto 10px;
+            flex:0 0 125px
+        }
+
+        .description-box{
+            height:75px;
+            border:1px solid var(--line);
+            border-radius:7px;
+            padding:8px;
+            background:#f8fafc;
+            overflow:hidden
+        }
+
+        .description-box h3{
+            margin:0 0 4px;
+            font-size:14px
+        }
+        .description-box p{
+            margin:3px 0;
+            font-size:16px;
+            white-space:pre-wrap
+        }
+
+        .meta{
+            margin-top:5px;
+            color:var(--muted);
+            font-size:13px
+        }
+        
+        @media(max-width:850px){
+            html,body{overflow:auto}.layout{grid-template-columns:1fr;flex:none}.map-area{min-height:470px}.palette{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.description{flex:none}
+        }
+        </style>
+    </head>
+    
+    <body>
+        <header>
+            <h1>マップ作成ツール</h1>
+        </header>
+        
+        <main class="layout">
+            <section class="panel map-area">
+                <h2>マップ</h2>
+                <div class="map-toolbar">
+                    <button class="primary" id="randomBtn">ランダム配置</button>
+                    <button id="resetBtn">リセット</button>
+                    <button id="clearBtn">全消去</button>
+                    <button id="unlockBtn">固定解除</button>
+                    <button id="exportBtn">画像出力</button>
+                </div>
+                <div id="map" class="map"></div>
+                <div class="meta">
+                    ドラッグ：移動　／　ダブルクリック：固定　／　右クリック：削除
+                </div>
+            </section>
+            
+            <aside class="panel" style="display:flex;flex-direction:column">
+                <h2>部屋一覧</h2>
+                <div id="palette" class="palette"></div>
+            </aside>
+        </main>
+        
+        <section class="panel description">
+            <h2>部屋の説明</h2>
+            <div id="description" class="description-box">
+                <h3>未選択</h3>
+                <p>マップ上の部屋をクリックすると説明が表示されます。</p>
+            </div>
+        </section>
+        
+        <script>
+        const ROWS=5,COLS=7,TOTAL=35;
+        const roomTypes=[
+            {id:"start",name:"スタート",count:1,icon:"🚩",description:"スタート地点かつゴール地点 PDF15p参照"},
+            {id:"battle",name:"戦闘",count:8,icon:"⚔️",description:"敵との戦闘が発生 PDF12~15p参照"},
+            {id:"boss-a",name:"ボス",count:1,icon:"🔫",description:"「カスパール」との戦闘部屋 PDF7p参照"},
+            {id:"boss-b",name:"ボス",count:1,icon:"🌹",description:"「アガミット」との戦闘部屋 PDF8p参照"},
+            {id:"boss-c",name:"ボス",count:1,icon:"🐺",description:"「わるいおおかみ」との戦闘部屋 PDF9p参照"},
+            {id:"boss-d",name:"ボス",count:1,icon:"🐻",description:"「森のくまさん」との戦闘部屋 PDF10p参照"},
+            {id:"item",name:"アイテム",count:6,icon:"🎁",description:"アイテムを入手できる部屋 PDF15p参照"},
+            {id:"emotion",name:"感情値",count:6,icon:"💗",description:"読むと感情値が上昇するテキストがある部屋 PDF15p参照"},
+            {id:"roulette",name:"ロシアンルーレット",count:1,icon:"🎲",description:"ロシアンルーレットを行う部屋 PDF17p参照"},
+            {id:"shuffle",name:"シャッフル",count:2,icon:"🔀",description:"部屋の内容をシャッフルする部屋 PDF17p参照"},
+            {id:"safe",name:"セーフティー",count:3,icon:"❤️‍🩹",description:"回復アイテムが設置された部屋 PDF17p参照"},
+            {id:"bomb",name:"ダンダン自爆",count:1,icon:"💣",description:"人形が置かれている部屋 PDF17p参照"},
+            {id:"check",name:"現在状況",count:1,icon:"✅",description:"魔弾所持状況を確認できる部屋 PDF17p参照"},
+            {id:"duck",name:"鴨",count:1,icon:"🦆",description:"魔弾所持状況を確認できる部屋 PDF17p参照"},
+            {id:"map",name:"マップ",count:1,icon:"📍",description:"鍵がかかっている部屋 敵の位置を確認できる PDF17p参照"}
+        ];
+        
+        let cells=Array(TOTAL).fill(null),selectedIndex=null,dragSource=null;
+        
+        const mapEl=document.getElementById("map"),paletteEl=document.getElementById("palette"),descriptionEl=document.getElementById("description");
+        const typeOf=id=>roomTypes.find(r=>r.id===id);
+        const labelOf=r=>r?typeOf(r.id).name:"";
+        const countUsed=id=>cells.filter(r=>r&&r.id===id).length;
+
+        function showDescription(i){
+            const r=cells[i];
+            if(!r){descriptionEl.innerHTML=`<h3>空きマス（${i+1}番）</h3><p>このマスには部屋がありません。右側からドラッグして配置できます。</p>`;return}
+            const t=typeOf(r.id);
+            descriptionEl.innerHTML=`<h3>${t.icon} ${t.name}</h3>
+            <p>${t.description}</p>`
+        }
+        
+        function renderPalette(){
+            paletteEl.innerHTML="";
+            roomTypes.forEach(t=>{
+                const card=document.createElement("div");
+                card.className="room-card";
+                card.draggable=true;
+                card.innerHTML=`<div class="room-icon">${t.icon}</div><div class="room-info"><div class="room-name">${t.name}</div><div class="room-count">${countUsed(t.id)} / ${t.count} 配置済み</div></div>`;
+                card.addEventListener("dragstart",e=>{dragSource={kind:"palette",id:t.id};
+                e.dataTransfer.setData("text/plain",t.id)});
+                paletteEl.appendChild(card)
+            })
+        }
+        
+        function renderMap(){
+            mapEl.innerHTML="";
+            cells.forEach(
+                (r,i)=>{
+                    const c=document.createElement("div");
+                    c.className="cell";
+                    c.dataset.index=i;
+                    c.draggable=!!r;
+                    if(r){c.dataset.type=r.id;if(r.fixed)c.classList.add("fixed");if(selectedIndex===i)c.classList.add("selected")}
+                    c.innerHTML=`<span class="cell-number">${i+1}</span>${r?`<span class="cell-icon">${typeOf(r.id).icon}</span><span class="cell-label">${labelOf(r)}</span>`:""}`;
+                    c.addEventListener("click",()=>{selectedIndex=i;showDescription(i);renderMap()});
+                    c.addEventListener("dblclick",()=>{if(r){r.fixed=!r.fixed;renderMap();showDescription(i)}});
+                    c.addEventListener("contextmenu",e=>{e.preventDefault();if(!r)return;if(r.fixed){return}cells[i]=null;renderAll();});
+                    c.addEventListener("dragstart",e=>{if(!r||r.fixed){e.preventDefault();return}dragSource={kind:"cell",index:i};e.dataTransfer.setData("text/plain",String(i))});
+                    c.addEventListener("dragover",e=>{e.preventDefault();c.classList.add("drag-over")});
+                    c.addEventListener("dragleave",()=>c.classList.remove("drag-over"));
+                    c.addEventListener("drop",e=>{e.preventDefault();c.classList.remove("drag-over");dropOn(i)});
+                    mapEl.appendChild(c)
+                }
+            )
+        }
+        
+        function dropOn(target){
+            if(!dragSource)return;
+            if(dragSource.kind==="cell"){
+                const from=dragSource.index;
+                if(from===target)return;
+                if(cells[target]?.fixed){
+                    return
+                }
+                const moving=cells[from];
+                cells[target]=moving;cells[from]=null;
+                selectedIndex=target;
+                renderAll();
+                return
+            }
+            
+            const id=dragSource.id,t=typeOf(id);
+            if(cells[target]?.fixed){
+                return
+            }
+            if(countUsed(id)>=t.count&&cells[target]?.id!==id){
+                return
+            }
+            cells[target]={id,fixed:false};
+            selectedIndex=target;
+            renderAll();
+        }
+        
+        function defaultMap(){
+            cells=Array(TOTAL).fill(null);
+            const i=(ROWS-1)*COLS+3;
+            cells[i]={id:"start",fixed:true};
+            selectedIndex=i
+        }
+        
+        function randomize(){
+            const fixed=cells.map(r=>r&&r.fixed?r:null),next=Array(TOTAL).fill(null);
+            fixed.forEach((r,i)=>{if(r)next[i]=r});
+            let rest=[];
+            roomTypes.forEach(t=>{for(let n=next.filter(r=>r&&r.id===t.id).length;n<t.count;n++)rest.push({id:t.id,fixed:false})});
+            const slots=next.map((r,i)=>r?null:i).filter(i=>i!==null);
+            for(let i=rest.length-1;i>0;i--){
+                const j=Math.floor(Math.random()*(i+1));
+                [rest[i],rest[j]]=[rest[j],rest[i]]
+            }
+            slots.forEach((i,n)=>next[i]=rest[n]);
+            cells=next;
+            selectedIndex=null;
+            renderAll();
+        }
+        
+        function exportMapImage(){
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            const cellW = 180;
+            const cellH = 140;
+            const gap = 8;
+            const padding = 24;
+            const titleHeight = 46;
+            canvas.width =COLS * cellW +(COLS - 1) * gap +padding * 2;
+            canvas.height =ROWS * cellH +(ROWS - 1) * gap +padding * 2 +titleHeight;
+            ctx.fillStyle = "#ffffff";ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = "#1f2937";
+            ctx.font = "bold 24px sans-serif";
+            ctx.textAlign = "left";
+            ctx.fillText("マップ",padding,32);
+            const colors = {
+                start: "#bbf7d0",
+                battle: "#fecaca",
+
+                "boss-a": "#ddd6fe",
+                "boss-b": "#c4b5fd",
+                "boss-c": "#e9d5ff",
+                "boss-d": "#f3e8ff",
+
+                item: "#fef3c7",
+                emotion: "#fbcfe8",
+
+                normal: "#dbeafe"
+            };
+            
+            const borders = {
+                start: "#16a34a",
+                battle: "#ef4444",
+
+                "boss-a": "#7c3aed",
+                "boss-b": "#6d28d9",
+                "boss-c": "#9333ea",
+                "boss-d": "#a855f7",
+
+                item: "#d97706",
+                emotion: "#db2777",
+
+                normal: "#2563eb"
+            };
+            
+            cells.forEach((room, index) => {
+                const row = Math.floor(index / COLS);
+                const col = index % COLS;
+                const x =padding +col * (cellW + gap);
+                const y =padding +titleHeight +row * (cellH + gap);
+                ctx.fillStyle = room? (colors[room.id] || "#e2e8f0"): "#f8fafc";
+                ctx.strokeStyle = room? (borders[room.id] || "#64748b"): "#cbd5e1";
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.roundRect(x,y,cellW,cellH,10);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = "#64748b";
+                ctx.font = "14px sans-serif";
+                ctx.textAlign = "left";
+
+                ctx.fillText(String(index + 1),x + 9,y + 20);
+                if (room) {
+                    const type = typeOf(room.id);
+                    ctx.textAlign = "center";
+                    ctx.font = "36px sans-serif";
+                    if (type.icon) {
+                        ctx.fillText(
+                            type.icon,
+                            x + cellW / 2,
+                            y + 57
+                        );
+                    }
+                    
+                    ctx.fillStyle = "#1f2937";
+                    ctx.font = "bold 18px sans-serif";
+                    ctx.fillText(
+                        type.name,
+                        x + cellW / 2,
+                        y + 91
+                    );
+                }
+            });
+            
+            const link = document.createElement("a");
+            link.download ="map_" +new Date().toISOString().slice(0, 10) +".png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+        
+        function renderAll(){
+            renderMap();
+            renderPalette();
+            if(selectedIndex!==null)showDescription(selectedIndex)
+        }
+    
+        document.getElementById("randomBtn").onclick=randomize;
+        document.getElementById("resetBtn").onclick=()=>{
+            defaultMap();
+            renderAll();
+        };
+        document.getElementById("clearBtn").onclick=()=>{
+            cells=cells.map(r=>r&&r.fixed?r:null);
+            selectedIndex=null;
+            renderAll();
+        };
+        document.getElementById("unlockBtn").onclick=()=>{
+            cells.forEach(r=>{if(r)r.fixed=false});
+            renderAll();
+        };
+        document.getElementById("exportBtn").onclick=exportMapImage;
+        document.addEventListener("dragend",()=>{dragSource=null});
+        defaultMap();
+        renderAll();
+        </script>
+    </body>
 </html>
