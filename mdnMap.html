@@ -159,32 +159,56 @@
             border-color:#ef4444
         }
         .cell[data-type="boss-a"]{
-            background:#ddd6fe;
-            border-color:#7c3aed
+            background:#9e88f8;
+            border-color:#6d28d9
         }
         .cell[data-type="boss-b"]{
-            background:#c4b5fd;
+            background:#9e88f8;
             border-color:#6d28d9
         }
         .cell[data-type="boss-c"]{
-            background:#e9d5ff;
-            border-color:#9333ea
+            background:#9e88f8;
+            border-color:#6d28d9
         }
         .cell[data-type="boss-d"]{
-            background:#f3e8ff;
-            border-color:#a855f7
+            background:#9e88f8;
+            border-color:#6d28d9
         }
         .cell[data-type=item]{
             background:#fef3c7;
             border-color:#d97706
         }
+        .cell[data-type=roulette]{
+            background:#c7bdc7;
+            border-color:#161516
+        }
         .cell[data-type=emotion]{
+            background:#ffb4ea;
+            border-color:#db2777
+        }
+        .cell[data-type=shuffle]{
+            background:#dbeafe;
+            border-color:#2563eb
+        }
+        .cell[data-type=safe]{
             background:#fbcfe8;
             border-color:#db2777
         }
-        .cell[data-type=normal]{
-            background:#dbeafe;
-            border-color:#2563eb
+        .cell[data-type=bomb]{
+            background:#c7b8b8;
+            border-color:#57092c
+        }
+        .cell[data-type=check]{
+            background:#49e435;
+            border-color:#57092c
+        }
+        .cell[data-type=duck]{
+            background:#faac04;
+            border-color:#866303
+        }
+        .cell[data-type=map]{
+            background:#d6c4ff;
+            border-color:#570eb8
         }
 
         .palette{
@@ -407,6 +431,9 @@
             cells=Array(TOTAL).fill(null);
             const i=(ROWS-1)*COLS+3;
             cells[i]={id:"start",fixed:true};
+
+            const ce=Math.floor(ROWS/2)*COLS+Math.floor(COLS/2);
+            cells[ce]={id:"map",fixed:true};
             selectedIndex=i
         }
         
