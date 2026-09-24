@@ -461,6 +461,12 @@ body.view-mode textarea {
     box-shadow: none;
 }
 
+body.view-mode .toolbar input,
+body.view-mode .toolbar select,
+body.view-mode .toolbar textarea {
+    pointer-events: auto;
+}
+
 body.view-mode #cocDiceCommand {
     pointer-events: auto;
 }

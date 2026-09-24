@@ -666,25 +666,39 @@ function updateViewMode() {
     viewModeButton.classList.toggle('active', viewing);
 
     document.querySelectorAll('input, select, textarea').forEach(el => {
-    if (el.dataset.originalReadonly === undefined) {
-        el.dataset.originalReadonly = el.readOnly ? '1' : '0';
-    }
+        if (el.dataset.originalReadonly === undefined) {
+            el.dataset.originalReadonly = el.readOnly ? '1' : '0';
+        }
 
-    if (el.dataset.originalDisabled === undefined) {
-        el.dataset.originalDisabled = el.disabled ? '1' : '0';
-    }
+        if (el.dataset.originalDisabled === undefined) {
+            el.dataset.originalDisabled = el.disabled ? '1' : '0';
+        }
+
+        const viewModeEditableIds = [
+            'saveSlot',
+            'newSlotName',
+            'importFile'
+        ];
 
         if (viewing) {
-            if (el.id === 'cocDiceCommand') {
+            if (
+                el.id === 'cocDiceCommand' ||
+                viewModeEditableIds.includes(el.id)
+            ){
                 el.disabled = false;
-            } 
-            else if (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'file') {
-            el.disabled = true;
-            } 
+                el.readOnly = false;
+            }
+            else if (
+                el.tagName === 'SELECT' ||
+                el.type === 'checkbox' ||
+                el.type === 'file'
+            ) {
+                el.disabled = true;
+            }
             else {
                 el.readOnly = true;
             }
-        } 
+        }
         else {
             el.disabled = el.dataset.originalDisabled === '1';
             el.readOnly = el.dataset.originalReadonly === '1';
