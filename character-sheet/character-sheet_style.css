@@ -455,7 +455,8 @@ body.view-mode section button.view-keep {
 body.view-mode input:not([type=checkbox]),
 body.view-mode select,
 body.view-mode textarea {
-    pointer-events: none;
+    pointer-events: auto;
+    overflow-y: auto;
     border-color: var(--line);
     background: #fffdf9;
     box-shadow: none;
