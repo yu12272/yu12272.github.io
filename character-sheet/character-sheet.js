@@ -758,11 +758,7 @@ function cocofolia(){
             ],
             commands:lines.join('\n'),
             memo:[
-                `年齢：${age.value||'未設定'}`,
-                `職業：${job.value||'未設定'}`,
-                `持ち物：${items.value||'未設定'}`,
-                `性格：${personality.value||'未設定'}`,
-                `メモ：${memo.value||'未設定'}`
+                characterMemo.value
             ].join('\n')
         }
     }
