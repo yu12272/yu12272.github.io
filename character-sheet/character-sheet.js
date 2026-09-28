@@ -383,21 +383,6 @@ function removeCustomUniqueMagic() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function removeBasicMagic() {
 
     const fields = [
@@ -912,20 +897,41 @@ function exportJson(){
     URL.revokeObjectURL(u)
 }
 
-function shareByUrl(){
+async function shareByUrl(){
     const data = collect();
     delete data.portraitData;
-    const encoded = btoa(
-        encodeURIComponent(JSON.stringify(data))
-            .replace(/%([0-9A-F]{2})/g,
-                (_, p1) => String.fromCharCode('0x' + p1)
-            )
-    );
+
+    const json = JSON.stringify(data);
+
+    const stream = new Blob([json])
+        .stream()
+        .pipeThrough(new CompressionStream('gzip'));
+
+    const compressed =
+        new Uint8Array(
+            await new Response(stream).arrayBuffer()
+        );
+
+    let binary = '';
+    const chunkSize = 0x8000;
+
+    for(let i = 0; i < compressed.length; i += chunkSize){
+        binary += String.fromCharCode(
+            ...compressed.subarray(i, i + chunkSize)
+        );
+    }
+
+    const encoded = btoa(binary)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
     const url =
         location.origin +
         location.pathname +
         '#' +
         encoded;
+
     navigator.clipboard.writeText(url)
         .then(() => {
             msg(
@@ -1049,24 +1055,38 @@ calculateAll();
 
 loadFromUrl();
 
-function loadFromUrl(){
+async function loadFromUrl(){
     if(!location.hash) return;
 
     try{
-        const binary = atob(location.hash.substring(1));
+        let base64 = location.hash.substring(1);
 
-        const bytes = Uint8Array.from(
+        base64 = base64
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+
+        while(base64.length % 4){
+            base64 += '=';
+        }
+
+        const binary = atob(base64);
+
+        const compressed = Uint8Array.from(
             binary,
             char => char.charCodeAt(0)
         );
 
-        const data = decodeURIComponent(
-            Array.from(bytes)
-                .map(byte =>
-                    '%' + byte.toString(16).padStart(2,'0')
-                )
-                .join('')
-        );
+        const stream = new Blob([compressed])
+            .stream()
+            .pipeThrough(new DecompressionStream('gzip'));
+
+        const bytes =
+            new Uint8Array(
+                await new Response(stream).arrayBuffer()
+            );
+
+        const data =
+            new TextDecoder().decode(bytes);
 
         apply(JSON.parse(data));
 
@@ -1080,6 +1100,7 @@ function loadFromUrl(){
     }
     catch(error){
         console.error(error);
+
         msg(
             'saveMessage',
             '共有URLの読み込みに失敗しました。',
