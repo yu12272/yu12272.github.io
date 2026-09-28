@@ -277,9 +277,12 @@ th {
     flex-wrap:wrap
 }
 #cocofoliaOutput {
-    min-height:180px;
+    height:42px;
+    min-height:0;
     font-family:monospace;
-    font-size:.84rem
+    font-size:.84rem;
+    resize:vertical;
+    overflow:auto;
 }
 
 

@@ -769,31 +769,18 @@ function cocofolia(){
 }
             
 
-function outputCocofolia(){
+async function outputCocofolia(){
     cocofoliaOutput.value=JSON.stringify(cocofolia());
-    msg('cocofoliaMessage','生成しました。','success')
-}
 
-async function copyCocofolia(){
-    if(!cocofoliaOutput.value)outputCocofolia();
     try{
-        await navigator.clipboard.writeText(cocofoliaOutput.value)
+        await navigator.clipboard.writeText(cocofoliaOutput.value);
+        msg('cocofoliaMessage','生成してコピーしました。','success');
     }
     catch{
         cocofoliaOutput.select();
-        document.execCommand('copy')
+        document.execCommand('copy');
+        msg('cocofoliaMessage','生成してコピーしました。','success');
     }
-    msg('cocofoliaMessage','コピーしました。','success')
-}
-
-function downloadCocofoliaJson(){
-    if(!cocofoliaOutput.value)outputCocofolia();
-    let a=document.createElement('a'),
-    u=URL.createObjectURL(new Blob([cocofoliaOutput.value],{type:'application/json'}));
-    a.href=u;
-    a.download=(charName.value||'ダイス振り男')+'_ccfolia.json';
-    a.click();
-    URL.revokeObjectURL(u)
 }
 
 function collect(){
