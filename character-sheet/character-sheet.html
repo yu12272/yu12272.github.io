@@ -332,6 +332,15 @@
                             <input id="uniqueMagicCount" type="number" min="0" max="4" data-save oninput="calculateAll()">
                         </div>
                         <div id="uniqueMagicOptions" class="magic-options"></div>
+                        <div class="row no-print view-hide-control" style="margin-top:12px;">
+                            <button type="button" onclick="addCustomUniqueMagic()">
+                                固有魔法を追加
+                            </button>
+                            <button type="button" class="danger" onclick="removeCustomUniqueMagic()">
+                                固有魔法を削除
+                            </button>
+                        </div>
+                        <div id="customUniqueMagicDeleteOptions" class="row no-print" style="margin-top:8px; display:none; flex-wrap:wrap;"></div>
                     </details>
 
 

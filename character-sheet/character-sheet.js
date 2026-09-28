@@ -284,6 +284,120 @@ function addBasicMagic(name = '', value = '') {
     calculateAll();
 }
 
+
+// 固有魔法適正に追加
+function addCustomUniqueMagic(name = '', checked = false) {
+    if (!name) {
+        name = prompt('追加する固有魔法の名前を入力してください。');
+    }
+
+    if (!name || !name.trim()) return;
+
+    name = name.trim();
+
+    const options = document.getElementById('uniqueMagicOptions');
+
+    // 同じ名前がすでにある場合は追加しない
+    const exists = [...options.querySelectorAll('.custom-unique-magic')]
+        .some(label => label.dataset.magicName === name);
+
+    const existingFixed = [...options.querySelectorAll('.check-card')]
+        .some(label =>
+            !label.classList.contains('custom-unique-magic') &&
+            label.textContent.trim() === name
+        );
+
+    if (exists || existingFixed) {
+        alert('同じ名前の固有魔法がすでにあります。');
+        return;
+    }
+
+    const label = document.createElement('label');
+    label.className = 'check-card custom-unique-magic';
+    label.dataset.magicName = name;
+
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.value = name;
+    input.checked = checked;
+    input.dataset.unique = '';
+    input.dataset.customUnique = '';
+    input.onchange = calculateAll;
+
+    label.appendChild(input);
+    label.appendChild(document.createTextNode(name));
+
+    options.appendChild(label);
+
+    calculateAll();
+}
+
+
+function removeCustomUniqueMagic() {
+    const fields = [
+        ...document.querySelectorAll(
+            '#uniqueMagicOptions .custom-unique-magic'
+        )
+    ];
+
+    const container = document.getElementById(
+        'customUniqueMagicDeleteOptions'
+    );
+
+    if (fields.length === 0) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        alert('削除できる追加固有魔法がありません。');
+        return;
+    }
+
+    if (container.style.display === 'flex') {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    fields.forEach(field => {
+        const name = field.dataset.magicName;
+        const button = document.createElement('button');
+
+        button.type = 'button';
+        button.className = 'danger';
+        button.textContent = name;
+
+        button.onclick = () => {
+            if (!confirm(`「${name}」を削除しますか？`)) {
+                return;
+            }
+            field.remove();
+            container.innerHTML = '';
+            container.style.display = 'none';
+            calculateAll();
+        };
+        container.appendChild(button);
+    });
+    container.style.display = 'flex';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function removeBasicMagic() {
 
     const fields = [
@@ -672,6 +786,16 @@ function collect(){
         magicEffect:c.querySelector('[data-field=magicEffect]').value
     }));
 
+    d.customUniqueMagics = [
+        ...document.querySelectorAll(
+            '#uniqueMagicOptions .custom-unique-magic'
+        )
+    ].map(label => ({
+        name: label.dataset.magicName,
+        checked: label.querySelector('[data-custom-unique]').checked
+    }));
+
+
     d.customBasicMagics=[
         ...document.querySelectorAll('#basicMagicGrid .custom-basic-magic')
     ].map(field=>({
@@ -687,6 +811,14 @@ function apply(d){
     portraitData=d.portraitData||'';
     showPortrait();
     document.querySelectorAll('[data-save]').forEach(e=>{if(d[e.id]!==undefined)e.type==='checkbox'?e.checked=!!d[e.id]:e.value=d[e.id]});
+    document.querySelectorAll(
+        '#uniqueMagicOptions .custom-unique-magic'
+    ).forEach(field => field.remove());
+
+    (d.customUniqueMagics || []).forEach(magic => {
+        addCustomUniqueMagic(magic.name, magic.checked);
+    });
+
     document.querySelectorAll('#basicMagicGrid .custom-basic-magic')
         .forEach(field => field.remove());
     (d.customBasicMagics || []).forEach(magic => {
