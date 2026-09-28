@@ -707,13 +707,23 @@ function cocofolia(){
         `${cmd}<={射撃割振} 【射撃】`,
         `${cmd}<={跳躍割振}+{筋力} 【跳躍】`
     ];
+
     let ts=actionData('.technique'),ws=actionData('.weapon');
     if(ts.length)lines.push('// 技');
     ts.forEach(t=>{
-        lines.push(`${cmd}<=${refExpr(t.ref,t.mult,t.add)} 【${t.name||'名称未設定'}】`);
-        if(t.damage)lines.push(`${t.damage} 【${t.name||'名称未設定'}・ダメージ】`)
+        const name = t.name || '名称未設定';
+        lines.push(`${cmd}<=${refExpr(t.ref,t.mult,t.add)} 【${name}】`);
+        if(t.mp !== '') {
+            lines.push(`:MP-${t.mp} 【消費MP${name}】`);
         }
-    );
+        if(t.maintainMp !== '') {
+            lines.push(`:MP-${t.maintainMp} 【維持MP${name}】`);
+        }
+        if(t.damage) {
+            lines.push(`${t.damage} 【${name}・ダメージ】`);
+        }
+    });
+
     if(ws.length)lines.push('// 武器');
     ws.forEach(w=>{
         lines.push(`${cmd}<=${refExpr(w.ref,w.mult,w.add)} 【${w.name||'名称未設定'}】`);
