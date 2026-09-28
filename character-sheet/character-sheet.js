@@ -901,7 +901,60 @@ async function shareByUrl(){
     const data = collect();
     delete data.portraitData;
 
-    const json = JSON.stringify(data);
+    data.techniques = (data.techniques || []).map(t => [
+        t.name,
+        t.ref,
+        t.mult,
+        t.add,
+        t.damage,
+        t.mp,
+        t.maintainMp,
+        t.note
+    ]);
+
+    data.weapons = (data.weapons || []).map(w => [
+        w.name,
+        w.ref,
+        w.mult,
+        w.add,
+        w.damage,
+        w.note
+    ]);
+
+    data.magics = (data.magics || []).map(m => [
+        m.magicName,
+        m.magicEffect
+    ]);
+
+
+
+
+
+
+    function removeEmpty(value){
+        if(Array.isArray(value)){
+            return value
+                .map(removeEmpty)
+                .filter(item => item !== undefined);
+        }
+        if(value && typeof value === 'object'){
+            const result = {};
+            Object.entries(value).forEach(([key, item]) => {
+                const cleaned = removeEmpty(item);
+                if(
+                    cleaned !== undefined &&
+                    cleaned !== ''
+                ){
+                    result[key] = cleaned;
+                }
+            });
+            return result;
+        }
+        return value;
+    }
+
+    const compactData = removeEmpty(data);
+    const json = JSON.stringify(compactData);
 
     const stream = new Blob([json])
         .stream()
@@ -1088,7 +1141,39 @@ async function loadFromUrl(){
         const data =
             new TextDecoder().decode(bytes);
 
-        apply(JSON.parse(data));
+        const character = JSON.parse(data);
+
+        character.techniques =
+            (character.techniques || []).map(t => ({
+                name: t[0],
+                ref: t[1],
+                mult: t[2],
+                add: t[3],
+                damage: t[4],
+                mp: t[5],
+                maintainMp: t[6],
+                note: t[7]
+            }));
+
+        character.weapons =
+            (character.weapons || []).map(w => ({
+                name: w[0],
+                ref: w[1],
+                mult: w[2],
+                add: w[3],
+                damage: w[4],
+                mp: '',
+                maintainMp: '',
+                note: w[5]
+            }));
+
+        character.magics =
+            (character.magics || []).map(m => ({
+                magicName: m[0],
+                magicEffect: m[1]
+            }));
+
+        apply(character);
 
         msg(
             'saveMessage',
