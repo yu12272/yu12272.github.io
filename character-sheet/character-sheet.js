@@ -231,8 +231,15 @@ function clearStats(){
     
     
 function rollBasicMagic(){
-    basicMagicTotal.value=roll(1,100);
-    heatMagic.value=bodyMagic.value=controlMagic.value=0;calculateAll()
+    basicMagicTotal.value = roll(1,100);
+    heatMagic.value = bodyMagic.value = controlMagic.value = 0;
+    document.querySelectorAll(
+        '#basicMagicGrid .custom-basic-magic input[type="number"]'
+    ).forEach(input => {
+        input.value = 0;
+    });
+
+    calculateAll();
 }
 
 
