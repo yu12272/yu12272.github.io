@@ -176,7 +176,17 @@ function calculateAll(){
     special.forEach(([id,n])=>document.getElementById(`sp_${id}_total`).textContent=v.special[n]);
     let used=special.reduce((a,[id])=>a+N(`sp_${id}`),0);
     specialUsed.textContent=used;msg('specialMessage',used>100?'100点を超えています。':'範囲内です。',used>100?'warning':'success');
-    let bt=N('basicMagicTotal'),bu=N('heatMagic')+N('bodyMagic')+N('controlMagic');basicMagicUsed.textContent=bu;basicMagicTotalText.textContent=bt;
+    let bt = N('basicMagicTotal');
+    let bu =
+        N('heatMagic') +
+        N('bodyMagic') +
+        N('controlMagic');
+
+    document.querySelectorAll('[data-basic-magic-value]').forEach(input => {
+        bu += Number(input.value || 0);
+    });
+    basicMagicUsed.textContent=bu;
+    basicMagicTotalText.textContent=bt;
     msg('basicMagicMessage',bu>bt?'合計値を超えています。':bu<bt?`あと${bt-bu}点です。`:'一致しています。',bu>bt?'warning':bu===bt?'success':'note');
     let uc=N('uniqueMagicCount'),ch=document.querySelectorAll('[data-unique]:checked').length;
     uniqueMagicCountText.textContent=uc;msg('uniqueMagicMessage',ch>uc?'選択数超過です。':ch<uc?`あと${uc-ch}個です。`:'一致しています。',ch>uc?'warning':ch===uc?'success':'note');
@@ -223,6 +233,95 @@ function clearStats(){
 function rollBasicMagic(){
     basicMagicTotal.value=roll(1,100);
     heatMagic.value=bodyMagic.value=controlMagic.value=0;calculateAll()
+}
+
+
+function addBasicMagic(name = '', value = '') {
+    if (!name) {
+        name = prompt('追加する基礎魔法の名前を入力してください。');
+    }
+
+    if (!name || !name.trim()) return;
+
+    name = name.trim();
+
+    const grid = document.getElementById('basicMagicGrid');
+
+    const exists = [...grid.querySelectorAll('.custom-basic-magic')]
+        .some(field => field.dataset.magicName === name);
+
+    if (exists) {
+        alert('同じ名前の基礎魔法がすでにあります。');
+        return;
+    }
+
+    const field = document.createElement('div');
+    field.className = 'field custom-basic-magic';
+    field.dataset.magicName = name;
+
+    const label = document.createElement('label');
+    label.textContent = name;
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.value = value;
+    input.dataset.basicMagicValue = '';
+    input.oninput = calculateAll;
+
+    field.appendChild(label);
+    field.appendChild(input);
+
+    grid.appendChild(field);
+
+    calculateAll();
+}
+
+function removeBasicMagic() {
+
+    const fields = [
+        ...document.querySelectorAll(
+            '#basicMagicGrid .custom-basic-magic'
+        )
+    ];
+
+    const container = document.getElementById(
+        'basicMagicDeleteOptions'
+    );
+
+    if (fields.length === 0) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+
+        alert('削除できる追加基礎魔法がありません。');
+        return;
+    }
+
+    if (container.style.display === 'flex') {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        return;
+    }
+
+    container.innerHTML = '';
+    fields.forEach(field => {
+        const name = field.dataset.magicName;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'danger';
+        button.textContent = name;
+        button.onclick = () => {
+            if (!confirm(`「${name}」を削除しますか？`)) {
+                return;
+            }
+            field.remove();
+            container.innerHTML = '';
+            container.style.display = 'none';
+            calculateAll();
+        };
+        container.appendChild(button);
+    });
+    container.style.display = 'flex';
 }
 
 
@@ -555,23 +654,47 @@ function downloadCocofoliaJson(){
 
 function collect(){
     let d={portraitData};
-    document.querySelectorAll('[data-save]').forEach(e=>d[e.id]=e.type==='checkbox'?e.checked:e.value);
-    d.magics=[...document.querySelectorAll('.unique-detail')].map(c=>({magicName:c.querySelector('[data-field=magicName]').value,magicEffect:c.querySelector('[data-field=magicEffect]').value}));
+    document.querySelectorAll('[data-save]').forEach(e=>
+        d[e.id]=e.type==='checkbox'?e.checked:e.value
+    );
+
+    d.magics=[
+        ...document.querySelectorAll('.unique-detail')
+    ].map(c=>({
+        magicName:c.querySelector('[data-field=magicName]').value,
+        magicEffect:c.querySelector('[data-field=magicEffect]').value
+    }));
+
+    d.customBasicMagics=[
+        ...document.querySelectorAll('#basicMagicGrid .custom-basic-magic')
+    ].map(field=>({
+        name:field.dataset.magicName,
+        value:field.querySelector('input').value
+    }));
     d.techniques=actionData('.technique');
     d.weapons=actionData('.weapon');
-    return d
+    return d;
 }
 
 function apply(d){
-    portraitData=d.portraitData||'';showPortrait();
+    portraitData=d.portraitData||'';
+    showPortrait();
     document.querySelectorAll('[data-save]').forEach(e=>{if(d[e.id]!==undefined)e.type==='checkbox'?e.checked=!!d[e.id]:e.value=d[e.id]});
+    document.querySelectorAll('#basicMagicGrid .custom-basic-magic')
+        .forEach(field => field.remove());
+    (d.customBasicMagics || []).forEach(magic => {
+        addBasicMagic(magic.name, magic.value);
+    });
     uniqueMagicDetails.innerHTML='';
     (d.magics||[]).forEach(addUniqueMagicDetail);
     techniques.innerHTML='';
-    (d.techniques||[]).forEach(addTechnique);weapons.innerHTML='';
-    (d.weapons||[]).forEach(addWeapon);if(!d.magics?.length)addUniqueMagicDetail();
+    (d.techniques||[]).forEach(addTechnique);
+    weapons.innerHTML='';
+    (d.weapons||[]).forEach(addWeapon);
+    if(!d.magics?.length)addUniqueMagicDetail();
     if(!d.techniques?.length)addTechnique();
-    if(!d.weapons?.length)addWeapon();calculateAll()
+    if(!d.weapons?.length)addWeapon();
+    calculateAll()
 }
 
 function slots(){

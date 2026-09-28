@@ -271,7 +271,7 @@
                             <span id="basicMagicMessage" class="note">
                             </span>
                         </div>
-                        <div class="grid">
+                        <div class="grid" id="basicMagicGrid">
                             <div class="field">
                                 <label>
                                     合計値
@@ -297,6 +297,15 @@
                                 <input id="controlMagic" type="number" min="0" data-save oninput="calculateAll()">
                             </div>
                         </div>
+                        <div class="row no-print" style="margin-top:12px;">
+                            <button type="button" onclick="addBasicMagic()">
+                                基礎魔法を追加
+                            </button>
+                            <button type="button" class="danger" onclick="removeBasicMagic()">
+                                基礎魔法を削除
+                            </button>
+                        </div>
+                        <div id="basicMagicDeleteOptions" class="row no-print" style="margin-top:8px; display:none; flex-wrap:wrap;"></div>
                     </details>
 
 
