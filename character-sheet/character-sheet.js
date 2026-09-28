@@ -696,16 +696,29 @@ function cocofolia(){
         `${cmd}<={知識}*3 【知識】`,
         `${cmd}<={正確性}*3 【五感】`,
         `${cmd}<={俊敏性}+{正確性}+{幸運} 【追跡】`,
-        '// 特殊技能',
-        `${cmd}<={変装割振} 【変装】`,
-        `${cmd}<={変声割振}+{正確性} 【変声】`,
-        `${cmd}<={交渉割振} 【交渉】`,
-        `${cmd}<={権威割振} 【権威】`,
-        `${cmd}<={魅了割振}+{容姿} 【魅了】`,
-        `${cmd}<={心理学割振}+{思考力} 【心理学】`,
-        `${cmd}<={盗み割振}+{正確性} 【盗み】`,
-        `${cmd}<={射撃割振} 【射撃】`,
-        `${cmd}<={跳躍割振}+{筋力} 【跳躍】`
+
+        ...(() => {
+            const specialSkillLines = [
+                [N('sp_disguise'), `${cmd}<={変装割振} 【変装】`],
+                [N('sp_voice'), `${cmd}<={変声割振}+{正確性} 【変声】`],
+                [N('sp_negotiate'), `${cmd}<={交渉割振} 【交渉】`],
+                [N('sp_authority'), `${cmd}<={権威割振} 【権威】`],
+                [N('sp_charm'), `${cmd}<={魅了割振}+{容姿} 【魅了】`],
+                [N('sp_psychology'), `${cmd}<={心理学割振}+{思考力} 【心理学】`],
+                [N('sp_steal'), `${cmd}<={盗み割振}+{正確性} 【盗み】`],
+                [N('sp_shooting'), `${cmd}<={射撃割振} 【射撃】`],
+                [N('sp_jump'), `${cmd}<={跳躍割振}+{筋力} 【跳躍】`]
+            ];
+
+            const activeSkills = specialSkillLines
+                .filter(([allocation]) => allocation > 0)
+                .map(([, line]) => line);
+
+            return activeSkills.length > 0
+                ? ['// 特殊技能', ...activeSkills]
+                : [];
+        })()
+
     ];
 
     let ts=actionData('.technique'),ws=actionData('.weapon');
@@ -714,10 +727,10 @@ function cocofolia(){
         const name = t.name || '名称未設定';
         lines.push(`${cmd}<=${refExpr(t.ref,t.mult,t.add)} 【${name}】`);
         if(t.mp !== '') {
-            lines.push(`:MP-${t.mp} 【消費MP${name}】`);
+            lines.push(`:MP-${t.mp} 【消費MP:${name}】`);
         }
         if(t.maintainMp !== '') {
-            lines.push(`:MP-${t.maintainMp} 【維持MP${name}】`);
+            lines.push(`:MP-${t.maintainMp} 【維持MP:${name}】`);
         }
         if(t.damage) {
             lines.push(`${t.damage} 【${name}・ダメージ】`);
