@@ -840,6 +840,7 @@ function apply(d){
     if(!d.techniques?.length)addTechnique();
     if(!d.weapons?.length)addWeapon();
     calculateAll()
+    updateViewMode();
 }
 
 function slots(){
@@ -906,8 +907,41 @@ function deleteSlot(){
 
 function exportJson(){
     let d=collect(),a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
-    a.href=u;a.download=(charName.value||'character')+'.json';a.click();URL.revokeObjectURL(u)
+    a.href=u;
+    a.download=(charName.value||'character')+'.json';a.click();
+    URL.revokeObjectURL(u)
 }
+
+function shareByUrl(){
+    const data = collect();
+    delete data.portraitData;
+    const encoded = btoa(
+        encodeURIComponent(JSON.stringify(data))
+            .replace(/%([0-9A-F]{2})/g,
+                (_, p1) => String.fromCharCode('0x' + p1)
+            )
+    );
+    const url =
+        location.origin +
+        location.pathname +
+        '#' +
+        encoded;
+    navigator.clipboard.writeText(url)
+        .then(() => {
+            msg(
+                'saveMessage',
+                '共有URLをコピーしました。',
+                'success'
+            );
+        })
+        .catch(() => {
+            prompt(
+                '共有URLをコピーしてください。',
+                url
+            );
+        });
+}
+
 
 function importJson(e){
     let r=new FileReader();
@@ -1012,3 +1046,44 @@ addWeapon();
 showPortrait();
 refresh();
 calculateAll();
+
+loadFromUrl();
+
+function loadFromUrl(){
+    if(!location.hash) return;
+
+    try{
+        const binary = atob(location.hash.substring(1));
+
+        const bytes = Uint8Array.from(
+            binary,
+            char => char.charCodeAt(0)
+        );
+
+        const data = decodeURIComponent(
+            Array.from(bytes)
+                .map(byte =>
+                    '%' + byte.toString(16).padStart(2,'0')
+                )
+                .join('')
+        );
+
+        apply(JSON.parse(data));
+
+        msg(
+            'saveMessage',
+            '共有URLからキャラクターを読み込みました。',
+            'success'
+        );
+
+        setMode('view');
+    }
+    catch(error){
+        console.error(error);
+        msg(
+            'saveMessage',
+            '共有URLの読み込みに失敗しました。',
+            'warning'
+        );
+    }
+}
