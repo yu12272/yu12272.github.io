@@ -1135,6 +1135,9 @@ function updateViewMode() {
     const viewing = currentMode === 'view';
 
     document.body.classList.toggle('view-mode', viewing);
+    document.querySelectorAll('details').forEach(detail => {
+        detail.open = !viewing;
+    });
 
     editModeButton.classList.toggle('active', !viewing);
     viewModeButton.classList.toggle('active', viewing);
@@ -1186,9 +1189,10 @@ function updateViewMode() {
     });
 
     document.querySelectorAll('#specialSkills tr').forEach(row => {
-        const total = Number(row.querySelector('.calc')?.textContent || 0);
-
-        row.classList.toggle('view-hidden', viewing && total === 0);
+        const allocation = Number(
+            row.querySelector('input.mini')?.value || 0
+        );
+        row.classList.toggle('view-hidden', viewing && allocation === 0);
     });
 
     document.querySelectorAll('#uniqueMagicOptions .check-card').forEach(card => {
