@@ -315,27 +315,6 @@ footer {
     padding:0 20px 28px;
     font-size:.85rem
 }
-@media(max-width:650px) {
-    .portrait-wrap {
-        grid-template-columns:1fr
-    }
-}
-@media print {
-    body {
-        background:#fff
-    }
-    .toolbar,button,.no-print,input[type=file] {
-        display:none!important
-    }
-    section,header {
-        box-shadow:none
-    }
-    main {
-        width:100%
-    }
-}
-
-
 
 details {
     background: #fff;
@@ -619,6 +598,27 @@ details.technique[open] > summary {
 .technique-summary-name {
     flex: 1;
 }
+
+@media(max-width:650px) {
+    .portrait-wrap {
+        grid-template-columns:1fr
+    }
+}
+@media print {
+    body {
+        background:#fff
+    }
+    .toolbar,button,.no-print,input[type=file] {
+        display:none!important
+    }
+    section,header {
+        box-shadow:none
+    }
+    main {
+        width:100%
+    }
+}
+
 
 @media (max-width: 650px) {
 
