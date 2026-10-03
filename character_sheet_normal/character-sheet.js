@@ -602,7 +602,8 @@ function loadPortrait(e){
             cv.width=Math.round(img.width*scale);
             cv.height=Math.round(img.height*scale);
             cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-            portraitData=cv.toDataURL('image/jpeg',.82);showPortrait()
+            portraitData=cv.toDataURL('image/png');
+            showPortrait()
         };
         img.src=r.result
     };
