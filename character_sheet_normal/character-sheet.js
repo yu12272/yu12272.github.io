@@ -1381,3 +1381,364 @@ async function loadFromUrl(){
         );
     }
 }
+
+async function exportCharacterImage() {
+
+    const speech = prompt('画像に表示するセリフを入力してください。');
+
+    if (speech === null) return;
+
+    calculateAll();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1408;
+    canvas.height = 1056;
+
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#c5d5da';
+
+    for (let x = 0; x < canvas.width; x += 102) {
+        for (let y = 0; y < canvas.height; y += 102) {
+            ctx.beginPath();
+            ctx.arc(x, y, 7, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function text(str, x, y, size = 24, color = '#252525') {
+        ctx.fillStyle = color;
+        ctx.font = `${size}px "Yu Gothic", Meiryo, sans-serif`;
+        ctx.textBaseline = 'top';
+        ctx.fillText(String(str), x, y);
+    }
+
+    function box(x, y, w, h, title, color) {
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#222222';
+        ctx.lineWidth = 2;
+
+        ctx.fillRect(x, y, w, h);
+        ctx.strokeRect(x, y, w, h);
+
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, w, 42);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 22px "Yu Gothic", Meiryo, sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        ctx.fillText(title, x + w / 2, y + 21);
+        ctx.textAlign = 'left';
+    }
+
+    function wrapText(str, x, y, maxWidth, lineHeight,size = 22, color = '#252525') {
+
+        ctx.fillStyle = color;
+        ctx.font = `${size}px "Yu Gothic", Meiryo, sans-serif`;
+        ctx.textBaseline = 'top';
+
+        const lines = [];
+        let line = '';
+
+        for (const char of String(str)) {
+
+            if (char === '\n') {
+                lines.push(line);
+                line = '';
+                continue;
+            }
+
+            const test = line + char;
+
+            if (ctx.measureText(test).width > maxWidth) {
+                lines.push(line);
+                line = char;
+            } else {
+                line = test;
+            }
+        }
+
+        if (line) lines.push(line);
+
+        lines.forEach((line, i) => {
+            ctx.fillText(line, x, y + i * lineHeight);
+        });
+
+        return y + lines.length * lineHeight;
+    }
+
+    const name = charName.value || '';
+    const race = originSetting.value || '';
+    const jobName = job.value || '';
+
+    const uniqueMagic = [
+        ...document.querySelectorAll('#uniqueMagicOptions [data-unique]:checked')
+    ].map(el => el.value);
+
+    const magicDetails = [
+        ...document.querySelectorAll('.unique-detail')
+    ].map(card => ({
+        name: card.querySelector('[data-field="magicName"]').value,
+        effect: card.querySelector('[data-field="magicEffect"]').value
+    })).filter(m => m.name || m.effect);
+
+    const techniqueNames = [
+        ...document.querySelectorAll('#techniques .technique')
+    ].map(card => card.querySelector('[data-field="name"]').value.trim())
+     .filter(Boolean);
+
+    const specialValues = special
+        .filter(([id]) => N(`sp_${id}`) > 0)
+        .map(([id, skillName]) => ({
+            name: skillName,
+            value: document.getElementById(`sp_${id}_total`).textContent
+        }));
+
+    const magicValues = [
+        ['熱魔法', N('heatMagic')],
+        ['身体強化魔法', N('bodyMagic')],
+        ['操作魔法', N('controlMagic')],
+        ['総魔力量', N('mp')]
+    ];
+
+    const statValues = [
+        ['筋力', N('str')],
+        ['正確性', N('acc')],
+        ['俊敏性', N('agi')],
+        ['知識', N('know')],
+        ['思考力', N('think')],
+        ['容姿', N('looks')],
+        ['幸運', N('luck')]
+    ];
+
+    ctx.fillStyle = '#252525';
+    ctx.fillRect(0, 18, 868, 121);
+
+    text(name, 110, 55, 38, '#ffffff');
+
+    text(`種族：${race}`, 665, 40, 22, '#ffffff');
+    text(`職業：${jobName}`, 665, 95, 22, '#ffffff');
+
+    box(22, 160, 675, 480, '固有魔法', '#252525');
+
+    text('固有魔法適正：', 37, 214, 21);
+
+    wrapText(
+        uniqueMagic.join('　'),
+        210, 214, 420, 28, 21
+    );
+
+    let magicY = 245;
+
+    magicDetails.forEach(magic => {
+
+        if (magic.name) {
+            magicY = wrapText(
+                magic.name,
+                52, magicY, 560, 20, 18
+            );
+        }
+
+        if (magic.effect) {
+            magicY = wrapText(
+                magic.effect,
+                52, magicY + 2, 560, 18, 16
+            );
+        }
+
+        magicY += 2;
+
+    });
+
+    const techniqueTitleY = magicY + 8;
+    ctx.fillStyle = '#dddddd';
+    ctx.fillRect(37, techniqueTitleY, 600, 1);
+    text('技一覧', 45, techniqueTitleY + 8, 20);
+
+    const techniqueTop = techniqueTitleY + 38;
+
+    const rowsPerColumn = Math.ceil(techniqueNames.length / 2);
+
+    techniqueNames.forEach((name, i) => {
+        const col = i < rowsPerColumn ? 0 : 1;
+        const row = col === 0
+            ? i
+            : i - rowsPerColumn;
+
+        const x = 45 + col * 290;
+        const y = techniqueTop + row * 28;
+
+        wrapText(name, x, y, 270, 22, 18);
+    });
+
+    box(22, 665, 282, 210, '基礎魔法適性', '#ed4380');
+
+    const barValues = [
+        ['熱魔法', N('heatMagic'), 99],
+        ['身体強化', N('bodyMagic'), 99],
+        ['操作魔法', N('controlMagic'), 99],
+        ['総魔力量', N('mp'), 120]
+    ];
+
+    const chartTop = 718;
+    const chartBottom = 833;
+    const chartHeight = chartBottom - chartTop;
+    const barWidth = 38;
+    const barGap = 25;
+    const firstBarX = 39;
+
+    barValues.forEach(([label, value, max], i) => {
+        const x = firstBarX + i * (barWidth + barGap);
+        const height = chartHeight * Math.min(value, max) / max;
+        const y = chartBottom - height;
+
+        ctx.fillStyle = '#eeeeee';
+        ctx.fillRect(x, chartTop, barWidth, chartHeight);
+
+        ctx.fillStyle = '#252525';
+        ctx.fillRect(x, y, barWidth, height);
+
+        ctx.textAlign = 'center';
+        text(value, x + barWidth / 2, chartBottom + 5, 14);
+
+        text(label, x + barWidth / 2, chartBottom + 24, 12);
+    });
+
+    ctx.textAlign = 'left';
+
+    box(22, 888, 282, 150, '特殊技能', '#ff9018');
+
+    specialValues.forEach((skill, i) => {
+        const col = i < 5 ? 0 : 1;
+        const row = i < 5 ? i : i - 5;
+
+        const x = 35 + col * 130;
+        const y = 940 + row * 20;
+
+        text(skill.name, x, y, 15);
+        text(skill.value, x + 98, y, 15);
+    });
+
+    box(317, 665, 380, 373, 'STATUS', '#3199df');
+
+    const cx = 507;
+    const cy = 865;
+    const radius = 105;
+    const maxStat = 30;
+    const count = statValues.length;
+
+    ctx.strokeStyle = '#acaaaa';
+    ctx.lineWidth = 1;
+
+    for (let level = 1; level <= 4; level++) {
+        const r = radius * level / 4;
+
+        ctx.beginPath();
+
+        for (let i = 0; i < count; i++) {
+            const angle = -Math.PI / 2 + i * Math.PI * 2 / count;
+            const x = cx + Math.cos(angle) * r;
+            const y = cy + Math.sin(angle) * r;
+
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    for (let i = 0; i < count; i++) {
+        const angle = -Math.PI / 2 + i * Math.PI * 2 / count;
+
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(
+            cx + Math.cos(angle) * radius,
+            cy + Math.sin(angle) * radius
+        );
+        ctx.stroke();
+    }
+
+    ctx.beginPath();
+
+    statValues.forEach(([label, value], i) => {
+        const angle = -Math.PI / 2 + i * Math.PI * 2 / count;
+        const r = radius * Math.min(value, maxStat) / maxStat;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(49,153,223,0.25)';
+    ctx.fill();
+    ctx.strokeStyle = '#222222';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    statValues.forEach(([label, value], i) => {
+        const angle = -Math.PI / 2 + i * Math.PI * 2 / count;
+        const x = cx + Math.cos(angle) * (radius + 35);
+        const y = cy + Math.sin(angle) * (radius + 35);
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        text(`${label} ${value}`, x, y, 14);
+    });
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+
+    if (portraitData) {
+        const img = new Image();
+        await new Promise(resolve => {
+            img.onload = () => {
+
+                const x = 715;
+                const y = 165;
+                const w = 677;
+                const h = 660;
+                const scale = Math.min(
+                    w / img.width,
+                    h / img.height
+                );
+                const drawW = img.width * scale;
+                const drawH = img.height * scale;
+                ctx.drawImage(
+                    img,
+                    x + (w - drawW) / 2,
+                    y + (h - drawH) / 2,
+                    drawW,
+                    drawH
+                );
+                resolve();
+            };
+            img.onerror = resolve;
+            img.src = portraitData;
+        });
+    }
+    if (speech.trim()) {
+        ctx.fillStyle = 'rgba(37,37,37,0.95)';
+        ctx.fillRect(715, 837, 677, 201);
+        ctx.strokeStyle = '#aaaaaa';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(715, 837, 677, 201);
+        wrapText(
+            '「' + speech + '」',
+            750, 865, 610, 36, 25, '#ffffff'
+        );
+    }
+
+    const link = document.createElement('a');
+    link.download = `${name || 'character'}_画像.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
