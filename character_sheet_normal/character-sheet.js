@@ -285,6 +285,7 @@ function addBasicMagic(name = '', value = '') {
 }
 
 
+// 固有魔法適正に追加
 function addCustomUniqueMagic(name = '', checked = false) {
     if (!name) {
         name = prompt('追加する固有魔法の名前を入力してください。');
@@ -296,6 +297,7 @@ function addCustomUniqueMagic(name = '', checked = false) {
 
     const options = document.getElementById('uniqueMagicOptions');
 
+    // 同じ名前がすでにある場合は追加しない
     const exists = [...options.querySelectorAll('.custom-unique-magic')]
         .some(label => label.dataset.magicName === name);
 
@@ -462,10 +464,12 @@ function addUniqueMagicDetail(d={}){
 function actionCard(type, d = {}) {
     let isTech = type === 'technique';
 
+    // 技の場合はdetails、武器の場合はdivを作成
     let c = document.createElement(isTech ? 'details' : 'div');
 
     c.className = `card ${type}`;
 
+    // 技は最初から開いた状態にする
     if (isTech) {
         c.open = true;
     }
@@ -558,8 +562,10 @@ function actionCard(type, d = {}) {
         </button>
     `;
 
+    // 技または武器の一覧に追加
     (isTech ? techniques : weapons).appendChild(c);
 
+    // 技名が入力されたら開閉タイトルも更新する
     if (isTech) {
         const nameInput = c.querySelector('[data-field="name"]');
         const summaryName = c.querySelector('.technique-summary-name');
@@ -602,8 +608,7 @@ function loadPortrait(e){
             cv.width=Math.round(img.width*scale);
             cv.height=Math.round(img.height*scale);
             cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-            portraitData=cv.toDataURL('image/png');
-            showPortrait()
+            portraitData=cv.toDataURL('image/png');showPortrait()
         };
         img.src=r.result
     };
@@ -820,6 +825,7 @@ function apply(d){
     if(!d.techniques?.length)addTechnique();
     if(!d.weapons?.length)addWeapon();
     calculateAll()
+    updateViewMode();
 }
 
 function slots(){
@@ -886,8 +892,228 @@ function deleteSlot(){
 
 function exportJson(){
     let d=collect(),a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
-    a.href=u;a.download=(charName.value||'character')+'.json';a.click();URL.revokeObjectURL(u)
+    a.href=u;
+    a.download=(charName.value||'character')+'.json';a.click();
+    URL.revokeObjectURL(u)
 }
+
+async function shareByUrl(){
+    const data = collect();
+    delete data.portraitData;
+
+    data.techniques = (data.techniques || []).map(t => [
+        t.name,
+        t.ref,
+        t.mult,
+        t.add,
+        t.damage,
+        t.mp,
+        t.maintainMp,
+        t.note
+    ]);
+
+    data.weapons = (data.weapons || []).map(w => [
+        w.name,
+        w.ref,
+        w.mult,
+        w.add,
+        w.damage,
+        w.note
+    ]);
+
+    data.magics = (data.magics || []).map(m => [
+        m.magicName,
+        m.magicEffect
+    ]);
+
+    data.customUniqueMagics = (data.customUniqueMagics || []).map(m => [
+        m.name,
+        m.checked
+    ]);
+
+    data.customBasicMagics = (data.customBasicMagics || []).map(m => [
+        m.name,
+        m.value
+    ]);
+
+    data.basic = [
+        data.charName,
+        data.age,
+        data.job,
+        data.originSetting
+    ];
+
+    delete data.charName;
+    delete data.age;
+    delete data.job;
+    delete data.originSetting;
+
+    data.stats = [
+        data.str,
+        data.acc,
+        data.agi,
+        data.know,
+        data.think,
+        data.looks,
+        data.luck,
+        data.emotion,
+        data.mp,
+        data.hp
+    ];
+
+    delete data.str;
+    delete data.acc;
+    delete data.agi;
+    delete data.know;
+    delete data.think;
+    delete data.looks;
+    delete data.luck;
+    delete data.emotion;
+    delete data.mp;
+    delete data.hp;
+
+    data.specialSkills = [
+        data.sp_disguise,
+        data.sp_voice,
+        data.sp_negotiate,
+        data.sp_authority,
+        data.sp_charm,
+        data.sp_psychology,
+        data.sp_steal,
+        data.sp_shooting,
+        data.sp_jump
+    ];
+
+    delete data.sp_disguise;
+    delete data.sp_voice;
+    delete data.sp_negotiate;
+    delete data.sp_authority;
+    delete data.sp_charm;
+    delete data.sp_psychology;
+    delete data.sp_steal;
+    delete data.sp_shooting;
+    delete data.sp_jump;
+
+    data.basicMagic = [
+        data.basicMagicTotal,
+        data.heatMagic,
+        data.bodyMagic,
+        data.controlMagic
+    ];
+
+    delete data.basicMagicTotal;
+    delete data.heatMagic;
+    delete data.bodyMagic;
+    delete data.controlMagic;
+
+    data.uniqueMagics = [
+        data['unique_変身'],
+        data['unique_変化'],
+        data['unique_創造'],
+        data['unique_命令'],
+        data['unique_回復'],
+        data['unique_光'],
+        data['unique_結界'],
+        data['unique_異常発達'],
+        data['unique_冒涜'],
+        data['unique_召喚']
+    ];
+
+    delete data['unique_変身'];
+    delete data['unique_変化'];
+    delete data['unique_創造'];
+    delete data['unique_命令'];
+    delete data['unique_回復'];
+    delete data['unique_光'];
+    delete data['unique_結界'];
+    delete data['unique_異常発達'];
+    delete data['unique_冒涜'];
+    delete data['unique_召喚'];
+
+    data.other = [
+        data.items,
+        data.personality,
+        data.memo,
+        data.characterMemo
+    ];
+
+    delete data.items;
+    delete data.personality;
+    delete data.memo;
+    delete data.characterMemo;
+
+
+
+    function removeEmpty(value){
+        if(Array.isArray(value)){
+            return value
+                .map(removeEmpty)
+                .filter(item => item !== undefined);
+        }
+        if(value && typeof value === 'object'){
+            const result = {};
+            Object.entries(value).forEach(([key, item]) => {
+                const cleaned = removeEmpty(item);
+                if(
+                    cleaned !== undefined &&
+                    cleaned !== ''
+                ){
+                    result[key] = cleaned;
+                }
+            });
+            return result;
+        }
+        return value;
+    }
+
+    const compactData = removeEmpty(data);
+    const json = JSON.stringify(compactData);
+
+    const stream = new Blob([json])
+        .stream()
+        .pipeThrough(new CompressionStream('gzip'));
+
+    const compressed =
+        new Uint8Array(
+            await new Response(stream).arrayBuffer()
+        );
+
+    let binary = '';
+    const chunkSize = 0x8000;
+
+    for(let i = 0; i < compressed.length; i += chunkSize){
+        binary += String.fromCharCode(
+            ...compressed.subarray(i, i + chunkSize)
+        );
+    }
+
+    const encoded = btoa(binary)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+    const url =
+        location.origin +
+        location.pathname +
+        '#' +
+        encoded;
+
+    navigator.clipboard.writeText(url)
+        .then(() => {
+            msg(
+                'saveMessage',
+                '共有URLをコピーしました。',
+                'success'
+            );
+        })
+        .catch(() => {
+            prompt(
+                '共有URLをコピーしてください。',
+                url
+            );
+        });
+}
+
 
 function importJson(e){
     let r=new FileReader();
@@ -989,371 +1215,6 @@ function setMode(mode) {
 }
 
 
-
-async function exportCharacterImage() {
-
-    const speech = prompt('画像に表示するセリフを入力してください。');
-
-    if (speech === null) return;
-
-    calculateAll();
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 1408;
-    canvas.height = 1056;
-
-    const ctx = canvas.getContext('2d');
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = '#c5d5da';
-
-    for (let x = 0; x < canvas.width; x += 102) {
-        for (let y = 0; y < canvas.height; y += 102) {
-            ctx.beginPath();
-            ctx.arc(x, y, 7, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
-    function text(str, x, y, size = 24, color = '#252525') {
-        ctx.fillStyle = color;
-        ctx.font = `${size}px "Yu Gothic", Meiryo, sans-serif`;
-        ctx.textBaseline = 'top';
-        ctx.fillText(String(str), x, y);
-    }
-
-    function box(x, y, w, h, title, color) {
-        ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = '#222222';
-        ctx.lineWidth = 2;
-
-        ctx.fillRect(x, y, w, h);
-        ctx.strokeRect(x, y, w, h);
-
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, w, 42);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 22px "Yu Gothic", Meiryo, sans-serif';
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = 'center';
-        ctx.fillText(title, x + w / 2, y + 21);
-        ctx.textAlign = 'left';
-    }
-
-    function wrapText(str, x, y, maxWidth, lineHeight,size = 22, color = '#252525') {
-
-        ctx.fillStyle = color;
-        ctx.font = `${size}px "Yu Gothic", Meiryo, sans-serif`;
-        ctx.textBaseline = 'top';
-
-        const lines = [];
-        let line = '';
-
-        for (const char of String(str)) {
-
-            if (char === '\n') {
-                lines.push(line);
-                line = '';
-                continue;
-            }
-
-            const test = line + char;
-
-            if (ctx.measureText(test).width > maxWidth) {
-                lines.push(line);
-                line = char;
-            } else {
-                line = test;
-            }
-        }
-
-        if (line) lines.push(line);
-
-        lines.forEach((line, i) => {
-            ctx.fillText(line, x, y + i * lineHeight);
-        });
-
-        return y + lines.length * lineHeight;
-    }
-
-    const name = charName.value || '';
-    const race = originSetting.value || '';
-    const jobName = job.value || '';
-
-    const uniqueMagic = [
-        ...document.querySelectorAll('#uniqueMagicOptions [data-unique]:checked')
-    ].map(el => el.value);
-
-    const magicDetails = [
-        ...document.querySelectorAll('.unique-detail')
-    ].map(card => ({
-        name: card.querySelector('[data-field="magicName"]').value,
-        effect: card.querySelector('[data-field="magicEffect"]').value
-    })).filter(m => m.name || m.effect);
-
-    const techniqueNames = [
-        ...document.querySelectorAll('#techniques .technique')
-    ].map(card => card.querySelector('[data-field="name"]').value.trim())
-     .filter(Boolean);
-
-    const specialValues = special
-        .filter(([id]) => N(`sp_${id}`) > 0)
-        .map(([id, skillName]) => ({
-            name: skillName,
-            value: document.getElementById(`sp_${id}_total`).textContent
-        }));
-
-    const magicValues = [
-        ['熱魔法', N('heatMagic')],
-        ['身体強化魔法', N('bodyMagic')],
-        ['操作魔法', N('controlMagic')],
-        ['総魔力量', N('mp')]
-    ];
-
-    const statValues = [
-        ['筋力', N('str')],
-        ['正確性', N('acc')],
-        ['俊敏性', N('agi')],
-        ['知識', N('know')],
-        ['思考力', N('think')],
-        ['容姿', N('looks')],
-        ['幸運', N('luck')]
-    ];
-
-    ctx.fillStyle = '#252525';
-    ctx.fillRect(0, 18, 868, 121);
-
-    text(name, 110, 55, 38, '#ffffff');
-
-    text(`種族：${race}`, 665, 40, 22, '#ffffff');
-    text(`職業：${jobName}`, 665, 95, 22, '#ffffff');
-
-    box(22, 160, 675, 480, '固有魔法', '#252525');
-
-    text('固有魔法適正：', 37, 214, 21);
-
-    wrapText(
-        uniqueMagic.join('　'),
-        210, 214, 420, 28, 21
-    );
-
-    let magicY = 245;
-
-    magicDetails.forEach(magic => {
-
-        if (magic.name) {
-            magicY = wrapText(
-                magic.name,
-                52, magicY, 560, 20, 18
-            );
-        }
-
-        if (magic.effect) {
-            magicY = wrapText(
-                magic.effect,
-                52, magicY + 2, 560, 18, 16
-            );
-        }
-
-        magicY += 2;
-
-    });
-
-    const techniqueTitleY = magicY + 8;
-    ctx.fillStyle = '#dddddd';
-    ctx.fillRect(37, techniqueTitleY, 600, 1);
-    text('技一覧', 45, techniqueTitleY + 8, 20);
-
-    const techniqueTop = techniqueTitleY + 38;
-
-    const rowsPerColumn = Math.ceil(techniqueNames.length / 2);
-
-    techniqueNames.forEach((name, i) => {
-        const col = i < rowsPerColumn ? 0 : 1;
-        const row = col === 0
-            ? i
-            : i - rowsPerColumn;
-
-        const x = 45 + col * 290;
-        const y = techniqueTop + row * 28;
-
-        wrapText(name, x, y, 270, 22, 18);
-    });
-
-    box(22, 665, 282, 210, '基礎魔法適性', '#ed4380');
-
-    const barValues = [
-        ['熱魔法', N('heatMagic'), 99],
-        ['身体強化', N('bodyMagic'), 99],
-        ['操作魔法', N('controlMagic'), 99],
-        ['総魔力量', N('mp'), 120]
-    ];
-
-    const chartTop = 718;
-    const chartBottom = 833;
-    const chartHeight = chartBottom - chartTop;
-    const barWidth = 38;
-    const barGap = 25;
-    const firstBarX = 39;
-
-    barValues.forEach(([label, value, max], i) => {
-        const x = firstBarX + i * (barWidth + barGap);
-        const height = chartHeight * Math.min(value, max) / max;
-        const y = chartBottom - height;
-
-        ctx.fillStyle = '#eeeeee';
-        ctx.fillRect(x, chartTop, barWidth, chartHeight);
-
-        ctx.fillStyle = '#252525';
-        ctx.fillRect(x, y, barWidth, height);
-
-        ctx.textAlign = 'center';
-        text(value, x + barWidth / 2, chartBottom + 5, 14);
-
-        text(label, x + barWidth / 2, chartBottom + 24, 12);
-    });
-
-    ctx.textAlign = 'left';
-
-    box(22, 888, 282, 150, '特殊技能', '#ff9018');
-
-    specialValues.forEach((skill, i) => {
-        const col = i < 5 ? 0 : 1;
-        const row = i < 5 ? i : i - 5;
-
-        const x = 35 + col * 130;
-        const y = 940 + row * 20;
-
-        text(skill.name, x, y, 15);
-        text(skill.value, x + 98, y, 15);
-    });
-
-    box(317, 665, 380, 373, 'STATUS', '#3199df');
-
-    const cx = 507;
-    const cy = 865;
-    const radius = 105;
-    const maxStat = 30;
-    const count = statValues.length;
-
-    ctx.strokeStyle = '#acaaaa';
-    ctx.lineWidth = 1;
-
-    for (let level = 1; level <= 4; level++) {
-        const r = radius * level / 4;
-
-        ctx.beginPath();
-
-        for (let i = 0; i < count; i++) {
-            const angle = -Math.PI / 2 + i * Math.PI * 2 / count;
-            const x = cx + Math.cos(angle) * r;
-            const y = cy + Math.sin(angle) * r;
-
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-
-        ctx.closePath();
-        ctx.stroke();
-    }
-
-    for (let i = 0; i < count; i++) {
-        const angle = -Math.PI / 2 + i * Math.PI * 2 / count;
-
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(
-            cx + Math.cos(angle) * radius,
-            cy + Math.sin(angle) * radius
-        );
-        ctx.stroke();
-    }
-
-    ctx.beginPath();
-
-    statValues.forEach(([label, value], i) => {
-        const angle = -Math.PI / 2 + i * Math.PI * 2 / count;
-        const r = radius * Math.min(value, maxStat) / maxStat;
-        const x = cx + Math.cos(angle) * r;
-        const y = cy + Math.sin(angle) * r;
-
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    });
-
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(49,153,223,0.25)';
-    ctx.fill();
-    ctx.strokeStyle = '#222222';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    statValues.forEach(([label, value], i) => {
-        const angle = -Math.PI / 2 + i * Math.PI * 2 / count;
-        const x = cx + Math.cos(angle) * (radius + 35);
-        const y = cy + Math.sin(angle) * (radius + 35);
-
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        text(`${label} ${value}`, x, y, 14);
-    });
-
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-
-    if (portraitData) {
-        const img = new Image();
-        await new Promise(resolve => {
-            img.onload = () => {
-
-                const x = 715;
-                const y = 165;
-                const w = 677;
-                const h = 660;
-                const scale = Math.min(
-                    w / img.width,
-                    h / img.height
-                );
-                const drawW = img.width * scale;
-                const drawH = img.height * scale;
-                ctx.drawImage(
-                    img,
-                    x + (w - drawW) / 2,
-                    y + (h - drawH) / 2,
-                    drawW,
-                    drawH
-                );
-                resolve();
-            };
-            img.onerror = resolve;
-            img.src = portraitData;
-        });
-    }
-    if (speech.trim()) {
-        ctx.fillStyle = 'rgba(37,37,37,0.95)';
-        ctx.fillRect(715, 837, 677, 201);
-        ctx.strokeStyle = '#aaaaaa';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(715, 837, 677, 201);
-        wrapText(
-            '「' + speech + '」',
-            750, 865, 610, 36, 25, '#ffffff'
-        );
-    }
-
-    const link = document.createElement('a');
-    link.download = `${name || 'character'}_画像.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-}
-
-
-
-
 render();
 addUniqueMagicDetail();
 addTechnique();
@@ -1361,3 +1222,162 @@ addWeapon();
 showPortrait();
 refresh();
 calculateAll();
+
+loadFromUrl();
+
+async function loadFromUrl(){
+    if(!location.hash) return;
+
+    try{
+        let base64 = location.hash.substring(1);
+
+        base64 = base64
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
+
+        while(base64.length % 4){
+            base64 += '=';
+        }
+
+        const binary = atob(base64);
+
+        const compressed = Uint8Array.from(
+            binary,
+            char => char.charCodeAt(0)
+        );
+
+        const stream = new Blob([compressed])
+            .stream()
+            .pipeThrough(new DecompressionStream('gzip'));
+
+        const bytes =
+            new Uint8Array(
+                await new Response(stream).arrayBuffer()
+            );
+
+        const data =
+            new TextDecoder().decode(bytes);
+
+        const character = JSON.parse(data);
+
+        character.techniques =
+            (character.techniques || []).map(t => ({
+                name: t[0],
+                ref: t[1],
+                mult: t[2],
+                add: t[3],
+                damage: t[4],
+                mp: t[5],
+                maintainMp: t[6],
+                note: t[7]
+            }));
+
+        character.weapons =
+            (character.weapons || []).map(w => ({
+                name: w[0],
+                ref: w[1],
+                mult: w[2],
+                add: w[3],
+                damage: w[4],
+                mp: '',
+                maintainMp: '',
+                note: w[5]
+            }));
+
+        character.magics =
+            (character.magics || []).map(m => ({
+                magicName: m[0],
+                magicEffect: m[1]
+            }));
+
+        character.customUniqueMagics =
+            (character.customUniqueMagics || []).map(m => ({
+                name: m[0],
+                checked: m[1]
+            }));
+
+        character.customBasicMagics =
+            (character.customBasicMagics || []).map(m => ({
+                name: m[0],
+                value: m[1]
+            }));
+
+        const basic = character.basic || [];
+
+        character.charName = basic[0] ?? '';
+        character.age = basic[1] ?? '';
+        character.job = basic[2] ?? '';
+        character.originSetting = basic[3] ?? '';
+
+
+        const stats = character.stats || [];
+        character.str = stats[0] ?? '';
+        character.acc = stats[1] ?? '';
+        character.agi = stats[2] ?? '';
+        character.know = stats[3] ?? '';
+        character.think = stats[4] ?? '';
+        character.looks = stats[5] ?? '';
+        character.luck = stats[6] ?? '';
+        character.emotion = stats[7] ?? '';
+        character.mp = stats[8] ?? '';
+        character.hp = stats[9] ?? '';
+
+        const specialSkills = character.specialSkills || [];
+
+        character.sp_disguise = specialSkills[0] ?? '';
+        character.sp_voice = specialSkills[1] ?? '';
+        character.sp_negotiate = specialSkills[2] ?? '';
+        character.sp_authority = specialSkills[3] ?? '';
+        character.sp_charm = specialSkills[4] ?? '';
+        character.sp_psychology = specialSkills[5] ?? '';
+        character.sp_steal = specialSkills[6] ?? '';
+        character.sp_shooting = specialSkills[7] ?? '';
+        character.sp_jump = specialSkills[8] ?? '';
+
+        const basicMagic = character.basicMagic || [];
+
+        character.basicMagicTotal = basicMagic[0] ?? '';
+        character.heatMagic = basicMagic[1] ?? '';
+        character.bodyMagic = basicMagic[2] ?? '';
+        character.controlMagic = basicMagic[3] ?? '';
+
+        const uniqueMagics = character.uniqueMagics || [];
+
+        character['unique_変身'] = !!uniqueMagics[0];
+        character['unique_変化'] = !!uniqueMagics[1];
+        character['unique_創造'] = !!uniqueMagics[2];
+        character['unique_命令'] = !!uniqueMagics[3];
+        character['unique_回復'] = !!uniqueMagics[4];
+        character['unique_光'] = !!uniqueMagics[5];
+        character['unique_結界'] = !!uniqueMagics[6];
+        character['unique_異常発達'] = !!uniqueMagics[7];
+        character['unique_冒涜'] = !!uniqueMagics[8];
+        character['unique_召喚'] = !!uniqueMagics[9];
+
+        const other = character.other || [];
+
+        character.items = other[0] ?? '';
+        character.personality = other[1] ?? '';
+        character.memo = other[2] ?? '';
+        character.characterMemo = other[3] ?? '';
+
+        apply(character);
+
+        msg(
+            'saveMessage',
+            '共有URLからキャラクターを読み込みました。',
+            'success'
+        );
+
+        setMode('view');
+    }
+    catch(error){
+        console.error(error);
+
+        msg(
+            'saveMessage',
+            '共有URLの読み込みに失敗しました。',
+            'warning'
+        );
+    }
+}
