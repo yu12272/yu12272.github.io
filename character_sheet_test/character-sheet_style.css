@@ -315,25 +315,6 @@ footer {
     padding:0 20px 28px;
     font-size:.85rem
 }
-@media(max-width:650px) {
-    .portrait-wrap {
-        grid-template-columns:1fr
-    }
-}
-@media print {
-    body {
-        background:#fff
-    }
-    .toolbar,button,.no-print,input[type=file] {
-        display:none!important
-    }
-    section,header {
-        box-shadow:none
-    }
-    main {
-        width:100%
-    }
-}
 
 
 
@@ -618,6 +599,178 @@ details.technique[open] > summary {
 
 .technique-summary-name {
     flex: 1;
+}
+
+.image-editor-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #25202f;
+    color: #fff;
+    padding: 0px 20px 0px 20px;
+    box-sizing: border-box;
+}
+
+.image-editor-screen[hidden] {
+    display: none !important;
+}
+
+.image-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.image-editor-header h2 {
+    margin: 0;
+}
+
+.image-editor-buttons {
+    display: flex;
+}
+
+.image-editor-buttons button {
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+
+.image-editor-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+.image-editor-preview-area {
+    flex: 1;
+    min-width: 0;
+}
+
+.image-editor-preview-area p {
+    margin-top: 0;
+}
+
+#imagePreviewCanvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: calc(100vh - 150px);
+    object-fit: contain;
+    background: #25202f;
+    cursor: grab;
+    touch-action: none;
+}
+
+#imagePreviewCanvas:active {
+    cursor: grabbing;
+}
+
+.image-editor-controls {
+    width: 280px;
+    flex-shrink: 0;
+}
+
+.image-editor-controls label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+#imageSpeechText {
+    width: 100%;
+    min-height: 120px;
+    box-sizing: border-box;
+    resize: vertical;
+    padding: 10px;
+    font: inherit;
+}
+
+.image-editor-header h2 {
+    color: #252525;
+}
+.image-editor-controls label {
+    color: #ffffff;
+}
+
+.image-display-options {
+    margin-bottom:20px;
+    padding:14px;
+    background:#30293d;
+    border:1px solid #555;
+    border-radius:10px;
+    width:280px;
+    height:calc(100vh - 180px);
+    overflow-y:auto;
+    flex-shrink:0;
+    box-sizing:border-box;
+}
+
+.image-display-options h3 {
+    margin: 0 0 12px;
+    color: #ffffff;
+    font-size: 18px;
+}
+
+.image-display-options strong {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    color: #ffffff;
+}
+
+.image-display-options label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 3px 0;
+    color: #ffffff;
+    font-weight: normal;
+}
+
+.image-display-options label input[type="checkbox"] {
+    flex: 0 0 auto;
+    width: auto;
+    margin: 0;
+}
+
+@media (max-width: 800px) {
+    .image-editor-content {
+        flex-direction: column;
+    }
+
+    .image-editor-controls {
+        width: 100%;
+    }
+
+    .image-editor-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media(max-width:650px) {
+    .portrait-wrap {
+        grid-template-columns:1fr
+    }
+}
+@media print {
+    body {
+        background:#fff
+    }
+    .toolbar,button,.no-print,input[type=file] {
+        display:none!important
+    }
+    section,header {
+        box-shadow:none
+    }
+    main {
+        width:100%
+    }
 }
 
 @media (max-width: 650px) {
