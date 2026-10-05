@@ -32,7 +32,7 @@ const stats=[
     ['luck','幸運'],
     ['emotion','感情値'],
     ['mp','総魔力量'],
-    ['hp','体力',1]
+    ['hp','体力']
 ];
 
 
@@ -116,7 +116,7 @@ function vals(){
         mp:N('mp')
     };
 
-    v.hp=v.str+50;v.combat={
+    v.hp=N('hp');v.combat={
         拳:v.acc+60,
         蹴り:v.acc+30,
         回避:Math.min(v.acc+v.agi,90),
@@ -227,6 +227,7 @@ function rollStats(){
     ['str','acc','agi','know','think','looks','luck'].forEach(x=>document.getElementById(x).value=roll(5,6));
     emotion.value=roll(10,6);
     mp.value=originSetting.value==='始祖'?roll(1,100)+20:Math.max(0,roll(1,100)-1);
+    hp.value=N('str')+50;
     calculateAll()
 }
 
