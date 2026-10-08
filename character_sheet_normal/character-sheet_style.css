@@ -387,11 +387,6 @@ body.view-mode #editModeButton {
     box-shadow: none;
 }
 
-
-.view-hidden {
-    display: none !important;
-}
-
 body.view-mode main {
     display: flex;
     flex-direction: column;
@@ -531,41 +526,6 @@ body.view-mode main > section {
     height: fit-content;
     min-height: 0;
 }
-
-body.view-mode .view-column {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    min-width: 0;
-}
-
-body.view-mode .view-column > * {
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    grid-area: auto !important;
-}
-
-.view-columns,
-.view-column {
-    display: contents;
-}
-
-body.view-mode .view-columns {
-    display: grid;
-    grid-template-columns: 1fr 1.4fr 1.4fr;
-    align-items: start;
-    gap: 8px;
-    width: 100%;
-}
-
-body.view-mode .view-column details {
-    height: fit-content;
-    min-height: 0;
-    align-self: stretch;
-}
-
 
 details.technique {
     padding: 0 12px 12px;
@@ -870,10 +830,10 @@ details.technique[open] > summary {
     text-align: center;
 }
 
-.view-skills-panel #viewSkills,
-.view-special-panel #viewSpecialSkills {
+#viewSkills,
+#viewSpecialSkills {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:1fr;
     gap: 6px;
 }
 
@@ -899,55 +859,6 @@ details.technique[open] > summary {
 .view-special-value {
     font-size: 18px;
     font-weight: bold;
-}
-
-.view-unique-detail-item {
-    padding: 10px 12px;
-    border: 1px solid #ded4e8;
-    border-radius: 8px;
-    background: #faf9fc;
-}
-
-.view-unique-detail-item + .view-unique-detail-item {
-    margin-top: 8px;
-}
-
-.view-unique-detail-name {
-    font-size: 17px;
-    font-weight: bold;
-    margin-bottom: 4px;
-}
-
-.view-unique-detail-effect {
-    white-space: pre-wrap;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-.view-technique-item,
-.view-weapon-item {
-    padding: 10px 12px;
-    border: 1px solid #ded4e8;
-    border-radius: 8px;
-    background: #faf9fc;
-}
-
-.view-technique-item + .view-technique-item,
-.view-weapon-item + .view-weapon-item {
-    margin-top: 8px;
-}
-
-.view-technique-name,
-.view-weapon-name {
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.view-technique-value,
-.view-weapon-value {
-    margin-top: 3px;
-    font-size: 14px;
-    white-space: pre-wrap;
 }
 
 .view-other-item {
@@ -1011,6 +922,7 @@ body.view-mode #characterSheetScreen {
     background: #fff;
     border: 1px solid #d8cfee;
     border-radius: 8px;
+    overflow: visible;
 }
 
 .view-item-collapsible summary {
@@ -1044,44 +956,12 @@ body.view-mode #characterSheetScreen {
     padding-bottom: 8px;
 }
 
-.view-technique-value,
-.view-unique-detail-effect {
-    padding: 4px 0 8px;
-}
-
 .view-technique-content {
     padding: 8px 4px 10px;
 }
 
-.view-technique-row {
-    display: grid;
-    grid-template-columns: 140px 1fr;
-    gap: 12px;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid #c8c8c8;
-}
-
-.view-technique-label {
-    font-weight: 700;
-    color: #6f6a60;
-}
-
 .view-technique-row .view-technique-value {
-    padding: 0;
-}
-
-.view-technique-note {
-    padding-top: 10px;
-}
-
-.view-technique-note-text {
-    margin-top: 4px;
-    padding: 8px 10px;
-    background: #f7f5fa;
-    border-radius: 6px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+    padding:8px 16px;
 }
 
 #viewScreen > * + * {
@@ -1140,6 +1020,7 @@ body.view-mode #characterSheetScreen {
     border-right: 1px solid var(--line);
 
     font-weight: 600;
+    color: #6f6a60;
     white-space: nowrap;
 }
 
@@ -1150,6 +1031,7 @@ body.view-mode #characterSheetScreen {
     padding: 8px 12px;
 
     min-width: 0;
+    font-size: 14px;
     white-space: nowrap;
 }
 
@@ -1162,6 +1044,7 @@ body.view-mode #characterSheetScreen {
 
     background: #fff;
     margin-top: 6px;
+    padding-top: 10px;
 }
 
 .view-technique-note .view-technique-label {
@@ -1170,27 +1053,14 @@ body.view-mode #characterSheetScreen {
 }
 
 .view-technique-note-text {
-    padding: 10px 12px;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-}
-
-.view-unique-detail-effect {
-    margin-top: 6px;
-
+    margin-top: 4px;
     padding: 10px 12px;
 
-    border: 1px solid var(--line);
+    background: #f7f5fa;
     border-radius: 6px;
 
-    background: #fffdf9;
-
     white-space: pre-wrap;
     overflow-wrap: break-word;
-}
-
-.view-item-collapsible {
-    overflow: visible;
 }
 
 .view-unique-detail-effect {
@@ -1202,6 +1072,8 @@ body.view-mode #characterSheetScreen {
 
     background: #fffdf9;
 
+    font-size: 14px;
+    line-height: 1.5;
     white-space: pre-wrap;
     overflow-wrap: break-word;
     box-sizing: border-box;
@@ -1243,22 +1115,6 @@ body.view-mode #characterSheetScreen {
 }
 
 @media (max-width: 650px) {
-
-    body.view-mode .view-columns {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        width: 100%;
-    }
-
-    body.view-mode .view-column {
-        display: contents;
-    }
-
-    body.view-mode .view-column > * {
-        width: 100%;
-        min-width: 0;
-    }
 
     body.view-mode .view-other {
         grid-column: auto;

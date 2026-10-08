@@ -2,6 +2,8 @@ const KEY='trpgSheet_v4';
 let portraitData='';
 let currentMode = 'edit';
 
+let showSpeechListenerAdded = false;
+
 let imageDisplaySettings = {
     unique: [],
     basicDefault: [],
@@ -2817,9 +2819,12 @@ function createImageDisplayOptions() {
     const showSpeech = document.getElementById('showSpeech');
 
     if (showSpeech) {
-        showSpeech.addEventListener('change', () => {
-            renderCharacterImage(false);
-        });
+        if(!showSpeechListenerAdded){
+            showSpeech.addEventListener('change', () => {
+                renderCharacterImage(false);
+            });
+            showSpeechListenerAdded = true;
+        }
     }
 
 }
@@ -2854,8 +2859,8 @@ function renderViewStats() {
         item.className = 'view-stat-item';
 
         item.innerHTML = `
-            <span class="view-stat-label">${label}</span>
-            <span class="view-stat-value">${value || '-'}</span>
+            <span class="view-stat-label">${E(label)}</span>
+            <span class="view-stat-value">${E(value || '-')}</span>
         `;
 
         container.appendChild(item);
@@ -3418,8 +3423,8 @@ function renderViewOther() {
         item.className = 'view-other-item';
 
         item.innerHTML = `
-            <span class="view-other-label">${label}</span>
-            <span class="view-other-value">${value}</span>
+            <span class="view-other-label">${E(label)}</span>
+            <span class="view-other-value">${E(value)}</span>
         `;
 
         container.appendChild(item);
