@@ -1,6 +1,5 @@
 
-
-const ALLOWED_ORIGIN = "https://YOUR-USERNAME.github.io";
+const ALLOWED_ORIGIN = "https://github.com/yu12272/yu12272.github.io";
 
 function json(data, status = 200, origin = ALLOWED_ORIGIN) {
   return new Response(JSON.stringify(data), {
