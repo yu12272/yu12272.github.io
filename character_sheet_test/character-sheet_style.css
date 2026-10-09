@@ -189,12 +189,14 @@ button.ok {
     color:var(--ok);
     font-weight:700
 }
+
 table {
     width:100%;
     border-collapse:collapse;
     background:#fff;
     border:1px solid var(--line)
 }
+
 th,td {
     padding:9px;
     border-bottom:1px solid #eee7dd;
@@ -1077,6 +1079,32 @@ body.view-mode #characterSheetScreen {
     white-space: pre-wrap;
     overflow-wrap: break-word;
     box-sizing: border-box;
+}
+
+body:not(.view-mode) #combatSkillsTable,
+body:not(.view-mode) #searchSkillsTable {
+    table-layout: fixed;
+}
+
+body:not(.view-mode) #combatSkillsTable th:nth-child(1),
+body:not(.view-mode) #combatSkillsTable td:nth-child(1),
+body:not(.view-mode) #searchSkillsTable th:nth-child(1),
+body:not(.view-mode) #searchSkillsTable td:nth-child(1) {
+    width: 40%;
+}
+
+body:not(.view-mode) #combatSkillsTable th:nth-child(2),
+body:not(.view-mode) #combatSkillsTable td:nth-child(2),
+body:not(.view-mode) #searchSkillsTable th:nth-child(2),
+body:not(.view-mode) #searchSkillsTable td:nth-child(2) {
+    width: 50%;
+}
+
+body:not(.view-mode) #combatSkillsTable th:nth-child(3),
+body:not(.view-mode) #combatSkillsTable td:nth-child(3),
+body:not(.view-mode) #searchSkillsTable th:nth-child(3),
+body:not(.view-mode) #searchSkillsTable td:nth-child(3) {
+    width: 10%;
 }
 
 @media (max-width: 800px) {
