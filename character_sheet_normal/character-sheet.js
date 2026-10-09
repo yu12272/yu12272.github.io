@@ -99,8 +99,8 @@ function statName(id){
             
 
 function render(){
-    statsGrid.innerHTML=stats.map(([id,n,r])=>`<div class="field"><label>${n}</label><input id="${id}" type="number" min="0" data-save ${r?'readonly':''} oninput="calculateAll()"></div>`).join('');
-    specialSkills.innerHTML=special.map(([id,n,b])=>`<tr><td><b>【${n}】</b></td><td><input class="mini" id="sp_${id}" type="number" min="0" data-save oninput="calculateAll()"></td><td>${b}</td><td class="calc" id="sp_${id}_total">0</td></tr>`).join('');
+    statsGrid.innerHTML=stats.map(([id,n,r])=>`<div class="field"><label>${n}</label><input id="${id}" type="number" min="0" data-save ${r?'readonly':''} oninput="${id === 'str' ? 'hp.value = (Number(this.value) || 0) + 50;' : ''}calculateAll()"></div>`).join('');
+    specialSkills.innerHTML=special.map(([id,n,b])=>`<tr><td><b>【${n}】</b></td><td><input class="mini" id="sp_${id}" type="number" min="0" data-save oninput="calculateAll()""></td><td>${b}</td><td class="calc" id="sp_${id}_total">0</td></tr>`).join('');
     uniqueMagicOptions.innerHTML=uniqueNames.map(n=>`<label class="check-card"><input id="unique_${n}" type="checkbox" value="${n}" data-save data-unique onchange="calculateAll()">${n}</label>`).join('')
 }
 
@@ -152,7 +152,6 @@ function vals(){
 
 function calculateAll(){
     let v=vals();
-    hp.value=v.hp;
     let total=[
         'str',
         'acc',
