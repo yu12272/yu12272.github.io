@@ -36,37 +36,10 @@
                         保存・呼び出し
                     </strong>
                     <span id="saveMessage" class="note">
-                        ブラウザ内に保存します。
+                        JSON書き出し・読みこみができます。
                     </span>
                 </div>
-                <div class="grid two">
-                    <div class="field">
-                        <label>
-                            保存スロット
-                        </label>
-                        <select id="saveSlot">
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label>
-                            新規スロット名
-                        </label>
-                        <input id="newSlotName" placeholder="例：スロット1 / 第1話用">
-                    </div>
-                </div>
                 <div class="row">
-                    <button class="ok" onclick="saveSheet()">
-                        現在のシートを保存
-                    </button>
-                    <button onclick="loadSheet()">
-                        呼び出し
-                    </button>
-                    <button class="secondary" onclick="createSlot()">
-                        新規スロット作成
-                    </button>
-                    <button class="danger" onclick="deleteSlot()">
-                        削除
-                    </button>
                     <button class="secondary" onclick="exportJson()">
                         JSON書き出し
                     </button>
@@ -578,7 +551,7 @@ PL/
         </section>
 
         <footer id="pageFooter">
-            保存にはlocalStorageを使用します。立ち絵を含むバックアップはJSON書き出しをご利用ください。
+            保存にはJSON書き出しをご利用ください。
         </footer>
 
         <button id="backToTopButton" type="button" aria-label="ページの最上部へ戻る">
