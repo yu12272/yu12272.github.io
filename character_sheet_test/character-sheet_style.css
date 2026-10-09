@@ -1107,6 +1107,30 @@ body:not(.view-mode) #searchSkillsTable td:nth-child(3) {
     width: 10%;
 }
 
+button.secondary.btn-export {
+background: #3dbb73;
+color: #ffffff;
+border-color: #3dbb73;
+}
+
+button.secondary.btn-import {
+background: #ed8b24;
+color: #ffffff;
+border-color: #ed8b24;
+}
+
+button.secondary.btn-image {
+background: #55cde0;
+color: #ffffff;
+border-color: #55cde0;
+}
+
+button.secondary.btn-share {
+background: #8050b8;
+color: #ffffff;
+border-color: #8050b8;
+}
+
 @media (max-width: 800px) {
     .image-editor-content {
         flex-direction: column;
