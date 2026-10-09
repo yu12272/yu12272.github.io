@@ -1,1 +1,9 @@
 
+name = "trpg-sheet-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "trpg-sheets"
+database_id = "ここに実際のDatabase IDを入れる"
