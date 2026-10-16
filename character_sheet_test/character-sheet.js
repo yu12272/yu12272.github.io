@@ -749,7 +749,7 @@ function cocofolia(){
             status:[
                 {label:'HP',value:v.hp,max:v.hp},
                 {label:'MP',value:v.mp,max:v.mp},
-                {label:'SAN',value:v.emotion,max:v.emotion}
+                {label:'感情値',value:v.emotion,max:100}
             ],
             commands:lines.join('\n'),
             memo:[
