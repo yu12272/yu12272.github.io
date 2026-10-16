@@ -1,4 +1,3 @@
-const KEY='trpgSheet_v4';
 let portraitData='';
 let currentMode = 'edit';
 
@@ -750,7 +749,7 @@ function cocofolia(){
             status:[
                 {label:'HP',value:v.hp,max:v.hp},
                 {label:'MP',value:v.mp,max:v.mp},
-                {label:'SAN',value:v.emotion,max:v.emotion}
+                {label:'感情値',value:v.emotion,max:100}
             ],
             commands:lines.join('\n'),
             memo:[
@@ -842,68 +841,6 @@ function apply(d){
     if(!d.weapons?.length)addWeapon();
     calculateAll()
     updateViewMode();
-}
-
-function slots(){
-    try{return JSON.parse(localStorage.getItem(KEY))||{}}catch{return {}}
-}
-
-function setSlots(s) {
-    try {
-        localStorage.setItem(KEY, JSON.stringify(s));
-        return true;
-    } catch {
-        msg(
-            'saveMessage',
-            '保存容量を超えました。JSON書き出しをご利用ください。',
-            'warning'
-        );
-        return false;
-    }
-}
-
-function refresh(sel){
-    let s=slots(),n=Object.keys(s);
-    if(!n.length){s['スロット1']=collect();setSlots(s);
-        n=['スロット1']
-    }
-    saveSlot.innerHTML=n.map(x=>`<option>${E(x)}</option>`).join('');
-    if(sel)saveSlot.value=sel
-}
-
-function createSlot() {
-    const n =
-        newSlotName.value.trim() ||
-        `スロット${Object.keys(slots()).length + 1}`;
-
-    const s = slots();
-    s[n] = collect();
-
-    if (setSlots(s)) {
-        refresh(n);
-        msg('saveMessage', `「${n}」を作成しました。`, 'success');
-    }
-}
-
-function saveSheet() {
-    const n = saveSlot.value;
-    const s = slots();
-
-    s[n] = collect();
-
-    if (setSlots(s)) {
-        msg('saveMessage', `「${n}」に保存しました。`, 'success');
-    }
-}
-
-function loadSheet(){
-    let s=slots();
-    if(s[saveSlot.value])apply(s[saveSlot.value])
-}
-
-function deleteSlot(){
-    let n=saveSlot.value;if(!confirm(`「${n}」を削除しますか？`))return;
-    let s=slots();delete s[n];setSlots(s);refresh()
 }
 
 function exportJson(){
@@ -1190,8 +1127,6 @@ function updateViewMode() {
         }
 
         const viewModeEditableIds = [
-            'saveSlot',
-            'newSlotName',
             'importFile'
         ];
 
@@ -1239,7 +1174,6 @@ addTechnique();
 addWeapon();
 createImageDisplayOptions();
 showPortrait();
-refresh();
 calculateAll();
 
 loadFromUrl();
