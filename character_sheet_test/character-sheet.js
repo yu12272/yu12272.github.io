@@ -656,16 +656,7 @@ function cocofolia(){
         ['容姿',v.looks],
         ['幸運',v.luck],
         ['感情値',v.emotion],
-        ['総魔力量',v.mp],
-        ['変装割振',N('sp_disguise')],
-        ['変声割振',N('sp_voice')],
-        ['交渉割振',N('sp_negotiate')],
-        ['権威割振',N('sp_authority')],
-        ['魅了割振',N('sp_charm')],
-        ['心理学割振',N('sp_psychology')],
-        ['盗み割振',N('sp_steal')],
-        ['射撃割振',N('sp_shooting')],
-        ['跳躍割振',N('sp_jump')]
+        ['総魔力量',v.mp]
     ].map(([label,value])=>({label,value:String(value)}));
     let lines=[
         '// ステータス判定',
@@ -694,15 +685,15 @@ function cocofolia(){
 
         ...(() => {
             const specialSkillLines = [
-                [N('sp_disguise'), `${cmd}<={変装割振} 【変装】`],
-                [N('sp_voice'), `${cmd}<={変声割振}+{正確性} 【変声】`],
-                [N('sp_negotiate'), `${cmd}<={交渉割振} 【交渉】`],
-                [N('sp_authority'), `${cmd}<={権威割振} 【権威】`],
-                [N('sp_charm'), `${cmd}<={魅了割振}+{容姿} 【魅了】`],
-                [N('sp_psychology'), `${cmd}<={心理学割振}+{思考力} 【心理学】`],
-                [N('sp_steal'), `${cmd}<={盗み割振}+{正確性} 【盗み】`],
-                [N('sp_shooting'), `${cmd}<={射撃割振} 【射撃】`],
-                [N('sp_jump'), `${cmd}<={跳躍割振}+{筋力} 【跳躍】`]
+                [N('sp_disguise'), `${cmd}<=${N('sp_disguise')} 【変装】`],
+                [N('sp_voice'), `${cmd}<=${N('sp_voice')}+{正確性} 【変声】`],
+                [N('sp_negotiate'), `${cmd}<=${N('sp_negotiate')} 【交渉】`],
+                [N('sp_authority'), `${cmd}<=${N('sp_authority')} 【権威】`],
+                [N('sp_charm'), `${cmd}<=${N('sp_charm')}+{容姿} 【魅了】`],
+                [N('sp_psychology'), `${cmd}<=${N('sp_psychology')}+{思考力} 【心理学】`],
+                [N('sp_steal'), `${cmd}<=${N('sp_steal')}+{正確性} 【盗み】`],
+                [N('sp_shooting'), `${cmd}<=${N('sp_shooting')} 【射撃】`],
+                [N('sp_jump'), `${cmd}<=${N('sp_jump')}+{筋力} 【跳躍】`]
             ];
 
             const activeSkills = specialSkillLines
