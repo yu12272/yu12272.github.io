@@ -287,15 +287,13 @@
                         <input id="controlMagic" type="number" min="0" data-save oninput="calculateAll()">
                     </div>
                 </div>
-                <div class="row no-print view-hide-control" style="margin-top:12px;">
-                    <button type="button" onclick="addBasicMagic()">
-                        基礎魔法を追加
-                    </button>
-                    <button type="button" class="danger view-hide-control" onclick="removeBasicMagic()">
-                        基礎魔法を削除
-                    </button>
+                <div class="magic-add-control no-print view-hide-control">
+                    <label for="basicMagicNameInput">追加する基礎魔法</label>
+                    <div class="magic-add-row">
+                        <input id="basicMagicNameInput" type="text" maxlength="40" placeholder="魔法名を入力">
+                        <button type="button" onclick="addBasicMagicFromInput()">追加</button>
+                    </div>
                 </div>
-                <div id="basicMagicDeleteOptions" class="row no-print" style="margin-top:8px; display:none; flex-wrap:wrap;"></div>
             </details>
 
             <details class="view-unique-magic" open>
@@ -321,15 +319,13 @@
                     <input id="uniqueMagicCount" type="number" min="0" max="4" data-save oninput="calculateAll()">
                 </div>
                 <div id="uniqueMagicOptions" class="magic-options"></div>
-                <div class="row no-print view-hide-control" style="margin-top:12px;">
-                    <button type="button" onclick="addCustomUniqueMagic()">
-                        固有魔法を追加
-                    </button>
-                    <button type="button" class="danger" onclick="removeCustomUniqueMagic()">
-                        固有魔法を削除
-                    </button>
+                <div class="magic-add-control no-print view-hide-control">
+                    <label for="uniqueMagicNameInput">追加する固有魔法</label>
+                    <div class="magic-add-row">
+                        <input id="uniqueMagicNameInput" type="text" maxlength="40" placeholder="魔法名を入力">
+                        <button type="button" onclick="addCustomUniqueMagicFromInput()">追加</button>
+                    </div>
                 </div>
-                <div id="customUniqueMagicDeleteOptions" class="row no-print" style="margin-top:8px; display:none; flex-wrap:wrap;"></div>
             </details>
 
             <details class="view-unique-detail" open>

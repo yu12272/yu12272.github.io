@@ -46,6 +46,55 @@ body:not(.view-mode) .skill-success-value {
     transform: translateX(12px);
 }
 
+/* 基礎魔法・固有魔法の追加欄を入力＋追加ボタンでまとめる。 */
+.magic-add-control {
+    max-width: 520px;
+    margin-top: 12px;
+}
+
+.magic-add-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.magic-add-row input {
+    min-width: 0;
+    flex: 1;
+}
+
+.magic-add-row button,
+.magic-item-delete {
+    flex: 0 0 auto;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.magic-custom-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.magic-item-delete {
+    padding: 5px 10px;
+    font-size: .8rem;
+    box-shadow: none;
+}
+
+.custom-unique-choice {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.custom-unique-choice span {
+    flex: 1;
+}
+
 /* 特殊技能テーブル：追加行の入力欄と削除ボタンの余白を揃え、行高のずれを防ぐ。 */
 #specialSkillsTable {
     table-layout: fixed;

@@ -49,7 +49,9 @@ function addBasicMagic(name = '', value = '') {
     const grid = document.getElementById('basicMagicGrid');
 
     const exists = [...grid.querySelectorAll('.custom-basic-magic')]
-        .some(field => field.dataset.magicName === name);
+        .some(field => field.dataset.magicName === name) ||
+        [...grid.querySelectorAll('.field:not(.custom-basic-magic) label')]
+            .some(label => label.textContent.trim() === name);
 
     if (exists) {
         alert('同じ名前の基礎魔法がすでにあります。');
@@ -60,8 +62,17 @@ function addBasicMagic(name = '', value = '') {
     field.className = 'field custom-basic-magic';
     field.dataset.magicName = name;
 
+    const heading = document.createElement('div');
+    heading.className = 'magic-custom-heading';
     const label = document.createElement('label');
     label.textContent = name;
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'magic-item-delete danger view-hide-control';
+    deleteButton.textContent = '削除';
+    deleteButton.setAttribute('aria-label', `${name}を削除`);
+    deleteButton.onclick = () => removeBasicMagicField(deleteButton);
 
     const input = document.createElement('input');
     input.type = 'number';
@@ -70,11 +81,34 @@ function addBasicMagic(name = '', value = '') {
     input.dataset.basicMagicValue = '';
     input.oninput = calculateAll;
 
-    field.appendChild(label);
+    heading.append(label, deleteButton);
+    field.appendChild(heading);
     field.appendChild(input);
 
     grid.appendChild(field);
 
+    calculateAll();
+}
+
+// 入力欄から基礎魔法を追加し、追加成功時は入力欄を空にします。
+function addBasicMagicFromInput() {
+    const input = document.getElementById('basicMagicNameInput');
+    const before = document.querySelectorAll('#basicMagicGrid .custom-basic-magic').length;
+    if (!input.value.trim()) {
+        input.focus();
+        return;
+    }
+    addBasicMagic(input.value);
+    if (document.querySelectorAll('#basicMagicGrid .custom-basic-magic').length > before) {
+        input.value = '';
+        input.focus();
+    }
+}
+
+function removeBasicMagicField(button) {
+    const field = button.closest('.custom-basic-magic');
+    if (!field || !confirm(`「${field.dataset.magicName}」を削除しますか？`)) return;
+    field.remove();
     calculateAll();
 }
 
@@ -104,9 +138,9 @@ function addCustomUniqueMagic(name = '', checked = false) {
         return;
     }
 
-    const label = document.createElement('label');
-    label.className = 'check-card custom-unique-magic';
-    label.dataset.magicName = name;
+    const card = document.createElement('div');
+    card.className = 'check-card custom-unique-magic';
+    card.dataset.magicName = name;
 
     const input = document.createElement('input');
     input.type = 'checkbox';
@@ -116,111 +150,49 @@ function addCustomUniqueMagic(name = '', checked = false) {
     input.dataset.customUnique = '';
     input.onchange = calculateAll;
 
-    label.appendChild(input);
-    label.appendChild(document.createTextNode(name));
+    const choiceLabel = document.createElement('label');
+    choiceLabel.className = 'custom-unique-choice';
+    const nameLabel = document.createElement('span');
+    nameLabel.textContent = name;
 
-    options.appendChild(label);
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'magic-item-delete danger view-hide-control';
+    deleteButton.textContent = '削除';
+    deleteButton.setAttribute('aria-label', `${name}を削除`);
+    deleteButton.onclick = () => removeCustomUniqueMagic(deleteButton);
+
+    choiceLabel.append(input, nameLabel);
+    card.append(choiceLabel, deleteButton);
+
+    options.appendChild(card);
 
     calculateAll();
 }
 
 
-function removeCustomUniqueMagic() {
-    const fields = [
-        ...document.querySelectorAll(
-            '#uniqueMagicOptions .custom-unique-magic'
-        )
-    ];
-
-    const container = document.getElementById(
-        'customUniqueMagicDeleteOptions'
-    );
-
-    if (fields.length === 0) {
-        container.innerHTML = '';
-        container.style.display = 'none';
-        alert('削除できる追加固有魔法がありません。');
+// 入力欄から固有魔法を追加し、追加成功時は入力欄を空にします。
+function addCustomUniqueMagicFromInput() {
+    const input = document.getElementById('uniqueMagicNameInput');
+    const before = document.querySelectorAll('#uniqueMagicOptions .custom-unique-magic').length;
+    if (!input.value.trim()) {
+        input.focus();
         return;
     }
-
-    if (container.style.display === 'flex') {
-        container.innerHTML = '';
-        container.style.display = 'none';
-        return;
+    addCustomUniqueMagic(input.value);
+    if (document.querySelectorAll('#uniqueMagicOptions .custom-unique-magic').length > before) {
+        input.value = '';
+        input.focus();
     }
-
-    container.innerHTML = '';
-
-    fields.forEach(field => {
-        const name = field.dataset.magicName;
-        const button = document.createElement('button');
-
-        button.type = 'button';
-        button.className = 'danger';
-        button.textContent = name;
-
-        button.onclick = () => {
-            if (!confirm(`「${name}」を削除しますか？`)) {
-                return;
-            }
-            field.remove();
-            container.innerHTML = '';
-            container.style.display = 'none';
-            calculateAll();
-        };
-        container.appendChild(button);
-    });
-    container.style.display = 'flex';
 }
 
-
-
-function removeBasicMagic() {
-
-    const fields = [
-        ...document.querySelectorAll(
-            '#basicMagicGrid .custom-basic-magic'
-        )
-    ];
-
-    const container = document.getElementById(
-        'basicMagicDeleteOptions'
-    );
-
-    if (fields.length === 0) {
-        container.innerHTML = '';
-        container.style.display = 'none';
-
-        alert('削除できる追加基礎魔法がありません。');
-        return;
-    }
-
-    if (container.style.display === 'flex') {
-        container.innerHTML = '';
-        container.style.display = 'none';
-        return;
-    }
-
-    container.innerHTML = '';
-    fields.forEach(field => {
-        const name = field.dataset.magicName;
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'danger';
-        button.textContent = name;
-        button.onclick = () => {
-            if (!confirm(`「${name}」を削除しますか？`)) {
-                return;
-            }
-            field.remove();
-            container.innerHTML = '';
-            container.style.display = 'none';
-            calculateAll();
-        };
-        container.appendChild(button);
-    });
-    container.style.display = 'flex';
+function removeCustomUniqueMagic(button) {
+    const card = button?.closest('.custom-unique-magic');
+    if (!card || !confirm(`「${card.dataset.magicName}」を削除しますか？`)) return;
+    card.remove();
+    calculateAll();
 }
+
 
 
 function rollUniqueMagicCount(){
