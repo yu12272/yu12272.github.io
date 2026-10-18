@@ -1,6 +1,24 @@
 let portraitData='';
 let currentMode = 'edit';
 
+let skillModifiers = {
+    combat: {
+        拳: 0,
+        蹴り: 0,
+        回避: 0,
+        カウンター: 0,
+        弾き: 0
+    },
+    search: {
+        観察: 0,
+        分析: 0,
+        幸運: 0,
+        知識: 0,
+        五感: 0,
+        追跡: 0
+    }
+};
+
 let showSpeechListenerAdded = false;
 
 let imageDisplaySettings = {
@@ -118,20 +136,20 @@ function vals(){
     };
 
     v.hp=N('hp');v.combat={
-        拳:v.acc+60,
-        蹴り:v.acc+30,
-        回避:Math.min(v.acc+v.agi,90),
-        カウンター:v.acc,
-        弾き:v.acc
+        拳:v.acc+60+Number(skillModifiers.combat.拳||0),
+        蹴り:v.acc+30+Number(skillModifiers.combat.蹴り||0),
+        回避:Math.min(v.acc+v.agi,90)+Number(skillModifiers.combat.回避||0),
+        カウンター:v.acc+Number(skillModifiers.combat.カウンター||0),
+        弾き:v.acc+Number(skillModifiers.combat.弾き||0)
     };
 
     v.search={
-        観察:v.acc+40,
-        分析:v.think+30,
-        幸運:v.luck,
-        知識:v.know*3,
-        五感:v.acc*3,
-        追跡:v.agi+v.acc+v.luck
+        観察:v.acc+40+Number(skillModifiers.search.観察||0),
+        分析:v.think+30+Number(skillModifiers.search.分析||0),
+        幸運:v.luck+Number(skillModifiers.search.幸運||0),
+        知識:v.know*3+Number(skillModifiers.search.知識||0),
+        五感:v.acc*3+Number(skillModifiers.search.五感||0),
+        追跡:v.agi+v.acc+v.luck+Number(skillModifiers.search.追跡||0)
     };
 
     v.special={
@@ -146,6 +164,16 @@ function vals(){
         跳躍:N('sp_jump')+v.str
     };
     return v
+}
+
+function setSkillModifier(category, skill, value){
+    if (!skillModifiers[category] ||
+        !(skill in skillModifiers[category])) {
+        return;
+    }
+
+    skillModifiers[category][skill] = Number(value) || 0;
+    calculateAll();
 }
 
 
@@ -169,7 +197,24 @@ function calculateAll(){
         ['弾き','正確性']
     ];
 
-    combatSkills.innerHTML=c.map(x=>`<tr><td><b>【${x[0]}】</b></td><td>${x[1]}</td><td class="calc">${v.combat[x[0]]}</td></tr>`).join('');
+    combatSkills.innerHTML=c.map(x=>`
+        <tr>
+            <td><b>【${x[0]}】</b></td>
+            <td>${x[1]}</td>
+            <td>
+                <input
+                    class="mini skill-modifier"
+                    type="number"
+                    step="1"
+                    aria-label="${x[0]}の補正値"
+                    value="${Number(skillModifiers.combat[x[0]]||0)}"
+                    onchange="setSkillModifier('combat','${x[0]}',this.value)"
+                >
+            </td>
+            <td class="calc">${v.combat[x[0]]}</td>
+        </tr>
+    `).join('');
+
     let s=[
         ['観察','正確性+40'],
         ['分析','思考力+30'],
@@ -179,7 +224,24 @@ function calculateAll(){
         ['追跡','俊敏性+正確性+幸運']
     ];
 
-    searchSkills.innerHTML=s.map(x=>`<tr><td><b>【${x[0]}】</b></td><td>${x[1]}</td><td class="calc">${v.search[x[0]]}</td></tr>`).join('');
+    searchSkills.innerHTML=s.map(x=>`
+        <tr>
+            <td><b>【${x[0]}】</b></td>
+            <td>${x[1]}</td>
+            <td>
+                <input
+                    class="mini skill-modifier"
+                    type="number"
+                    step="1"
+                    aria-label="${x[0]}の補正値"
+                    value="${Number(skillModifiers.search[x[0]]||0)}"
+                    onchange="setSkillModifier('search','${x[0]}',this.value)"
+                >
+            </td>
+            <td class="calc">${v.search[x[0]]}</td>
+        </tr>
+    `).join('');
+
     special.forEach(([id,n])=>document.getElementById(`sp_${id}_total`).textContent=v.special[n]);
     let used=special.reduce((a,[id])=>a+N(`sp_${id}`),0);
     specialUsed.textContent=used;msg('specialMessage',used>100?'100点を超えています。':'範囲内です。',used>100?'warning':'success');
@@ -470,12 +532,10 @@ function addUniqueMagicDetail(d={}){
 function actionCard(type, d = {}) {
     let isTech = type === 'technique';
 
-    // 技の場合はdetails、武器の場合はdivを作成
     let c = document.createElement(isTech ? 'details' : 'div');
 
     c.className = `card ${type}`;
 
-    // 技は最初から開いた状態にする
     if (isTech) {
         c.open = true;
     }
@@ -568,10 +628,8 @@ function actionCard(type, d = {}) {
         </button>
     `;
 
-    // 技または武器の一覧に追加
     (isTech ? techniques : weapons).appendChild(c);
 
-    // 技名が入力されたら開閉タイトルも更新する
     if (isTech) {
         const nameInput = c.querySelector('[data-field="name"]');
         const summaryName = c.querySelector('.technique-summary-name');
@@ -643,6 +701,13 @@ function refExpr(ref,mult,add){
     return expr;
 }
 
+function skillCommandBonus(category, skill) {
+    const bonus = Number(skillModifiers[category]?.[skill] || 0);
+
+    if (bonus === 0) return '';
+    return bonus > 0 ? `+${bonus}` : String(bonus);
+}
+
 function cocofolia(){
     calculateAll();
     let v=vals(),
@@ -669,19 +734,18 @@ function cocofolia(){
         `${cmd}<={幸運} 【幸運】`,
         `${cmd}<={感情値} 【感情値】`,
         '// 通常戦闘技能',
-        `${cmd}<={正確性}+60 【拳】`,
-        `${cmd}<={正確性}+30 【蹴り】`,
-        `${cmd}<={正確性}+{俊敏性} 【回避】`,
-        `${cmd}<={正確性} 【カウンター】`,
-        `${cmd}<={正確性} 【弾き】`,
-        `({筋力}/2) 【こぶしダメージ】`,
+        `${cmd}<={正確性}+60${skillCommandBonus('combat','拳')} 【拳】`,
+        `${cmd}<={正確性}+30${skillCommandBonus('combat','蹴り')} 【蹴り】`,
+        `${cmd}<=min({正確性}+{俊敏性},90)${skillCommandBonus('combat','回避')} 【回避】`,
+        `${cmd}<={正確性}${skillCommandBonus('combat','カウンター')} 【カウンター】`,
+        `${cmd}<={正確性}${skillCommandBonus('combat','弾き')} 【弾き】`,
         '// 探索技能',
-        `${cmd}<={正確性}+40 【観察】`,
-        `${cmd}<={思考力}+30 【分析】`,
-        `${cmd}<={幸運} 【幸運】`,
-        `${cmd}<={知識}*3 【知識】`,
-        `${cmd}<={正確性}*3 【五感】`,
-        `${cmd}<={俊敏性}+{正確性}+{幸運} 【追跡】`,
+        `${cmd}<={正確性}+40${skillCommandBonus('search','観察')} 【観察】`,
+        `${cmd}<={思考力}+30${skillCommandBonus('search','分析')} 【分析】`,
+        `${cmd}<={幸運}${skillCommandBonus('search','幸運')} 【幸運】`,
+        `${cmd}<={知識}*3${skillCommandBonus('search','知識')} 【知識】`,
+        `${cmd}<={正確性}*3${skillCommandBonus('search','五感')} 【五感】`,
+        `${cmd}<={俊敏性}+{正確性}+{幸運}${skillCommandBonus('search','追跡')} 【追跡】`,
 
         ...(() => {
             const specialSkillLines = [
@@ -766,7 +830,11 @@ async function outputCocofolia(){
 }
 
 function collect(){
-    let d={portraitData};
+    let d={
+        portraitData,
+        skillModifiers: JSON.parse(JSON.stringify(skillModifiers))
+    };
+
     document.querySelectorAll('[data-save]').forEach(e=>
         d[e.id]=e.type==='checkbox'?e.checked:e.value
     );
@@ -801,6 +869,26 @@ function collect(){
 
 function apply(d){
     portraitData = d.portraitData || '';
+
+    skillModifiers = {
+        combat: {
+            拳: 0,
+            蹴り: 0,
+            回避: 0,
+            カウンター: 0,
+            弾き: 0,
+            ...(d.skillModifiers?.combat || {})
+        },
+        search: {
+            観察: 0,
+            分析: 0,
+            幸運: 0,
+            知識: 0,
+            五感: 0,
+            追跡: 0,
+            ...(d.skillModifiers?.search || {})
+        }
+    };
 
     portraitCanvasImage = null;
     characterBaseCanvas = null;
@@ -2867,7 +2955,7 @@ function renderViewSkills() {
             const cells = row.querySelectorAll('td');
             if (cells.length < 3) return;
             const name = cells[0].textContent.trim();
-            const value = cells[2].textContent.trim();
+            const value = cells[3].textContent.trim();
             if (!name) return;
             if (Number(value) === 0) return;
             const item = document.createElement('div');
