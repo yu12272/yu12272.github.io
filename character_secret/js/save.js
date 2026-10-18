@@ -113,23 +113,29 @@ function exportJson(){
 }
 
 async function shareByUrl() {
-    const saved = await saveCharacterToAccount();
-    if (!saved) return;
-
-    const id = accountCharacterId();
-    if (!id) {
-        msg('saveMessage', '共有IDを取得できませんでした。', 'warning');
-        return;
-    }
-
-    const shareUrl = new URL(location.origin + location.pathname);
-    shareUrl.searchParams.set('shareId', id);
-
     try {
-        await navigator.clipboard.writeText(shareUrl.toString());
-        msg('saveMessage', '共有URLをコピーしました。', 'success');
-    } catch {
-        prompt('共有URLをコピーしてください。', shareUrl.toString());
+        const saved = await saveCharacterToAccount();
+        if (!saved) return;
+
+        const id = accountCharacterId();
+        if (!id) throw Error("共有IDを取得できませんでした。");
+
+        const stored = await accountApi("/api/characters/" + encodeURIComponent(id));
+        if (portraitData && !stored.character?.characterData?.portraitData) {
+            throw Error("立ち絵がデータベースに保存されていません。Workerを更新して再Deployしてください。");
+        }
+
+        const shareUrl = new URL(location.origin + location.pathname);
+        shareUrl.searchParams.set("shareId", id);
+
+        try {
+            await navigator.clipboard.writeText(shareUrl.toString());
+            msg("saveMessage", "立ち絵を含む共有URLをコピーしました。", "success");
+        } catch {
+            prompt("共有URLをコピーしてください。", shareUrl.toString());
+        }
+    } catch (error) {
+        msg("saveMessage", error.message, "warning");
     }
 }
 
@@ -218,3 +224,5 @@ async function saveCharacterToAccount(){
  try{const characterData=await prepareAccountCharacterData();const result=await accountApi(path,{method:id?"PUT":"POST",body:JSON.stringify({characterName:name,characterData})});if(!id&&result.character?.characterId){const next=new URL(location.href);next.searchParams.set("characterId",result.character.characterId);history.replaceState(null,"",next);}msg("saveMessage","アカウントに保存しました。","success");return true;}
  catch(error){msg("saveMessage",error.message,"warning");return false;}
 }
+
+
