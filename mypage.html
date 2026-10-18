@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>マイキャラクター</title>
+  <style>
+    body {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      font-family: sans-serif;
+    }
+
+    button {
+      margin: 0.25rem;
+      padding: 0.5rem 0.8rem;
+      cursor: pointer;
+    }
+
+    li {
+      margin: 0.8rem 0;
+    }
+
+    pre {
+      overflow: auto;
+      padding: 1rem;
+      background: #f3f3f3;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    #message {
+      min-height: 1.5em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>マイキャラクター</h1>
+    <p id="user-label"></p>
+    <button id="new-button" type="button">新規キャラクター作成</button>
+    <button id="reload-button" type="button">一覧を更新</button>
+    <button id="logout-button" type="button">ログアウト</button>
+  </header>
+
+  <p id="message" role="status"></p>
+
+  <section>
+    <h2>キャラクター一覧</h2>
+    <ul id="character-list"></ul>
+  </section>
+
+  <section id="detail-section" hidden>
+    <h2 id="detail-title">キャラクター詳細</h2>
+    <p id="detail-meta"></p>
+    <pre id="detail-data"></pre>
+    <button id="close-detail-button" type="button">詳細を閉じる</button>
+  </section>
+
+  <script>
+    const API_BASE_URL =
+      "https://magicstart-apie.yu2005yu-h-072.workers.dev";
+
+    const token = sessionStorage.getItem("magicstart_session_token");
+    const username = sessionStorage.getItem("magicstart_username");
+
+    const message = document.querySelector("#message");
+    const characterList = document.querySelector("#character-list");
+    const detailSection = document.querySelector("#detail-section");
+
+    document.querySelector("#user-label").textContent =
+      username ? `ログイン中：${username}` : "";
+
+    if (!token) {
+      location.href = "./login.html";
+    }
+
+    async function api(path, options = {}) {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
+          ...options.headers,
+        },
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || `通信エラー (${response.status})`);
+      }
+
+      return result;
+    }
+
+    async function loadCharacters() {
+      message.textContent = "一覧を読み込んでいます…";
+      characterList.replaceChildren();
+
+      try {
+        const result = await api("/api/characters");
+
+        if (!result.characters || result.characters.length === 0) {
+          message.textContent = "キャラクターはまだありません。";
+          return;
+        }
+
+        message.textContent = "";
+
+        for (const character of result.characters) {
+          const item = document.createElement("li");
+          const title = document.createElement("strong");
+          const detailButton = document.createElement("button");
+          const deleteButton = document.createElement("button");
+
+          title.textContent =
+            character.character_name || "名前なし";
+
+          detailButton.textContent = "詳細";
+          detailButton.addEventListener("click", () => {
+            showDetail(character.character_id);
+          });
+
+          deleteButton.textContent = "削除";
+          deleteButton.addEventListener("click", () => {
+            deleteCharacter(
+              character.character_id,
+              character.character_name,
+            );
+          });
+
+          item.append(title, " ", detailButton, deleteButton);
+          characterList.append(item);
+        }
+      } catch (error) {
+        message.textContent = error.message;
+
+        if (error.message === "ログインが必要です") {
+          sessionStorage.removeItem("magicstart_session_token");
+          sessionStorage.removeItem("magicstart_username");
+          location.href = "./login.html";
+        }
+      }
+    }
+
+    async function showDetail(characterId) {
+      message.textContent = "詳細を読み込んでいます…";
+
+      try {
+        const result = await api(
+          `/api/characters/${encodeURIComponent(characterId)}`,
+        );
+
+        const character = result.character;
+
+        document.querySelector("#detail-title").textContent =
+          character.characterName || "名前なし";
+
+        document.querySelector("#detail-meta").textContent =
+          `ID: ${character.characterId} / 作成: ${character.createdAt}`;
+
+        document.querySelector("#detail-data").textContent =
+          JSON.stringify(character.characterData, null, 2);
+
+        detailSection.hidden = false;
+        message.textContent = "";
+        detailSection.scrollIntoView({ behavior: "smooth" });
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    }
+
+    async function createCharacter() {
+      const characterName = prompt("キャラクター名を入力してください");
+
+      if (characterName === null) {
+        return;
+      }
+
+      if (!characterName.trim()) {
+        message.textContent = "キャラクター名を入力してください。";
+        return;
+      }
+
+      message.textContent = "作成しています…";
+
+      try {
+        const result = await api("/api/characters", {
+          method: "POST",
+          body: JSON.stringify({
+            characterName: characterName.trim(),
+            characterData: {},
+          }),
+        });
+
+        message.textContent =
+          `「${result.character.characterName}」を作成しました。`;
+
+        await loadCharacters();
+        await showDetail(result.character.characterId);
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    }
+
+    async function deleteCharacter(characterId, characterName) {
+      const confirmed = confirm(
+        `「${characterName || "名前なし"}」を削除しますか？`,
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      message.textContent = "削除しています…";
+
+      try {
+        await api(
+          `/api/characters/${encodeURIComponent(characterId)}`,
+          { method: "DELETE" },
+        );
+
+        detailSection.hidden = true;
+        message.textContent = "削除しました。";
+        await loadCharacters();
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    }
+
+    document.querySelector("#new-button").addEventListener(
+      "click",
+      createCharacter,
+    );
+
+    document.querySelector("#reload-button").addEventListener(
+      "click",
+      loadCharacters,
+    );
+
+    document.querySelector("#logout-button").addEventListener(
+      "click",
+      async () => {
+        try {
+          await api("/api/logout", { method: "POST" });
+        } catch {
+          // APIに接続できなくても、このブラウザのトークンは消す
+        }
+
+        sessionStorage.removeItem("magicstart_session_token");
+        sessionStorage.removeItem("magicstart_username");
+        location.href = "./login.html";
+      },
+    );
+
+    document.querySelector("#close-detail-button").addEventListener(
+      "click",
+      () => {
+        detailSection.hidden = true;
+      },
+    );
+
+    loadCharacters();
+  </script>
+</body>
+</html>
