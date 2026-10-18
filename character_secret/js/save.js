@@ -180,9 +180,41 @@ async function loadCharacterFromAccount(){
  try{const result=await accountApi("/api/characters/"+encodeURIComponent(id));apply(result.character.characterData||{});if(!charName.value)charName.value=result.character.characterName||"";msg("saveMessage","アカウントから読み込みました。","success");}
  catch(error){msg("saveMessage",error.message,"warning");if(error.message==="ログインが必要です")location.href="login.html";}
 }
+const MAX_ACCOUNT_CHARACTER_BYTES = 1400000;
+async function prepareAccountCharacterData() {
+ const data = collect();
+ const sizeInBytes = () => new TextEncoder().encode(JSON.stringify(data)).byteLength;
+ if (sizeInBytes() <= MAX_ACCOUNT_CHARACTER_BYTES) return data;
+ if (!data.portraitData) throw Error("キャラクターデータが大きすぎます。");
+
+ const image = new Image();
+ await new Promise((resolve, reject) => {
+  image.onload = resolve;
+  image.onerror = () => reject(Error("立ち絵を読み込めませんでした。"));
+  image.src = data.portraitData;
+ });
+
+ const canvas = document.createElement("canvas");
+ const context = canvas.getContext("2d");
+ if (!context) throw Error("立ち絵を圧縮できませんでした。");
+
+ for (const scale of [1, 0.85, 0.7, 0.55, 0.4, 0.3]) {
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  for (const quality of [0.9, 0.8, 0.7, 0.6, 0.5]) {
+   data.portraitData = canvas.toDataURL("image/webp", quality);
+   if (sizeInBytes() <= MAX_ACCOUNT_CHARACTER_BYTES) return data;
+  }
+ }
+
+ throw Error("立ち絵を含むデータが大きすぎます。立ち絵画像を小さくしてください。");
+}
 async function saveCharacterToAccount(){
  const name=charName.value.trim();if(!name){msg("saveMessage","先にキャラクター名を入力してください。","warning");charName.focus();return false;}
  const id=accountCharacterId(),path=id?"/api/characters/"+encodeURIComponent(id):"/api/characters";
- try{const result=await accountApi(path,{method:id?"PUT":"POST",body:JSON.stringify({characterName:name,characterData:collect()})});if(!id&&result.character?.characterId){const next=new URL(location.href);next.searchParams.set("characterId",result.character.characterId);history.replaceState(null,"",next);}msg("saveMessage","アカウントに保存しました。","success");return true;}
+ try{const characterData=await prepareAccountCharacterData();const result=await accountApi(path,{method:id?"PUT":"POST",body:JSON.stringify({characterName:name,characterData})});if(!id&&result.character?.characterId){const next=new URL(location.href);next.searchParams.set("characterId",result.character.characterId);history.replaceState(null,"",next);}msg("saveMessage","アカウントに保存しました。","success");return true;}
  catch(error){msg("saveMessage",error.message,"warning");return false;}
 }
