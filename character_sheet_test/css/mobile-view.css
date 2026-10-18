@@ -1,0 +1,22 @@
+/*
+ * モジュール: mobile-view.css
+ * 制御範囲: 画面幅650px以下の閲覧画面で、ステータスの2列表示とその他情報の幅。
+ */
+
+@media (max-width: 650px) {
+
+    body.view-mode .view-other {
+        grid-column: auto;
+        width: 100%;
+    }
+
+    body.view-mode #statsGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    body.view-mode .view-cocofolia {
+        width: 100%;
+    }
+
+}

@@ -1,0 +1,66 @@
+/*
+ * モジュール: form.css
+ * 制御範囲: 編集画面の技能テーブル列幅と、保存・読み込み・画像・共有ボタンの色。
+ */
+
+body:not(.view-mode) #searchSkillsTable {
+    table-layout: fixed;
+}
+
+/* 1列目：技能名 */
+body:not(.view-mode) #combatSkillsTable th:nth-child(1),
+body:not(.view-mode) #combatSkillsTable td:nth-child(1),
+body:not(.view-mode) #searchSkillsTable th:nth-child(1),
+body:not(.view-mode) #searchSkillsTable td:nth-child(1) {
+    width: 30%;
+}
+
+/* 2列目：計算式 */
+body:not(.view-mode) #combatSkillsTable th:nth-child(2),
+body:not(.view-mode) #combatSkillsTable td:nth-child(2),
+body:not(.view-mode) #searchSkillsTable th:nth-child(2),
+body:not(.view-mode) #searchSkillsTable td:nth-child(2) {
+    width: 40%;
+}
+
+/* 3列目：補正値 */
+body:not(.view-mode) #combatSkillsTable th:nth-child(3),
+body:not(.view-mode) #combatSkillsTable td:nth-child(3),
+body:not(.view-mode) #searchSkillsTable th:nth-child(3),
+body:not(.view-mode) #searchSkillsTable td:nth-child(3) {
+    width: 15%;
+}
+
+/* 4列目：成功値 */
+body:not(.view-mode) #combatSkillsTable th:nth-child(4),
+body:not(.view-mode) #combatSkillsTable td:nth-child(4),
+body:not(.view-mode) #searchSkillsTable th:nth-child(4),
+body:not(.view-mode) #searchSkillsTable td:nth-child(4) {
+    width: 15%;
+}
+
+
+button.secondary.btn-export {
+background: #3dbb73;
+color: #ffffff;
+border-color: #3dbb73;
+}
+
+button.secondary.btn-import {
+background: #ed8b24;
+color: #ffffff;
+border-color: #ed8b24;
+}
+
+button.secondary.btn-image {
+background: #55cde0;
+color: #ffffff;
+border-color: #55cde0;
+}
+
+button.secondary.btn-share {
+background: #8050b8;
+color: #ffffff;
+border-color: #8050b8;
+}
+
