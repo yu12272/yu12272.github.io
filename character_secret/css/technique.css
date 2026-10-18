@@ -1,0 +1,37 @@
+/*
+ * モジュール: technique.css
+ * 制御範囲: 編集画面の技カードの開閉マーク、見出し行、カード内余白。
+ */
+
+details.technique {
+    padding: 0 12px 12px;
+}
+
+details.technique > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+}
+
+details.technique > summary::before {
+    content: '▶';
+    font-size: 0.8rem;
+}
+
+details.technique[open] > summary::before {
+    content: '▼';
+}
+
+details.technique[open] > summary {
+    margin-bottom: 12px;
+}
+
+.technique-summary-name {
+    flex: 1;
+}
+

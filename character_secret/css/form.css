@@ -1,0 +1,169 @@
+/*
+ * モジュール: form.css
+ * 制御範囲: 編集画面の技能テーブル列幅と、保存・読み込み・画像・共有ボタンの色。
+ */
+
+body:not(.view-mode) #combatSkillsTable,
+body:not(.view-mode) #searchSkillsTable {
+    table-layout: fixed;
+}
+
+/* 1列目：技能名 */
+body:not(.view-mode) #combatSkillsTable th:nth-child(1),
+body:not(.view-mode) #combatSkillsTable td:nth-child(1),
+body:not(.view-mode) #searchSkillsTable th:nth-child(1),
+body:not(.view-mode) #searchSkillsTable td:nth-child(1) {
+    width: 27.5%;
+}
+
+/* 2列目：計算式 */
+body:not(.view-mode) #combatSkillsTable th:nth-child(2),
+body:not(.view-mode) #combatSkillsTable td:nth-child(2),
+body:not(.view-mode) #searchSkillsTable th:nth-child(2),
+body:not(.view-mode) #searchSkillsTable td:nth-child(2) {
+    width: 37.5%;
+}
+
+/* 3列目：補正値 */
+body:not(.view-mode) #combatSkillsTable th:nth-child(3),
+body:not(.view-mode) #combatSkillsTable td:nth-child(3),
+body:not(.view-mode) #searchSkillsTable th:nth-child(3),
+body:not(.view-mode) #searchSkillsTable td:nth-child(3) {
+    width: 23%;
+}
+
+/* 4列目：成功値 */
+body:not(.view-mode) #combatSkillsTable th:nth-child(4),
+body:not(.view-mode) #combatSkillsTable td:nth-child(4),
+body:not(.view-mode) #searchSkillsTable th:nth-child(4),
+body:not(.view-mode) #searchSkillsTable td:nth-child(4) {
+    width: 12%;
+}
+
+/* 編集画面の技能値テーブルで、成功値の数字そのものを右へずらす。 */
+body:not(.view-mode) .skill-success-value {
+    display: inline-block;
+    transform: translateX(12px);
+}
+
+/* 基礎魔法・固有魔法の追加欄を入力＋追加ボタンでまとめる。 */
+.magic-add-control {
+    max-width: 520px;
+    margin-top: 12px;
+}
+
+.magic-add-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.magic-add-row input {
+    min-width: 0;
+    flex: 1;
+}
+
+.magic-add-row button,
+.magic-item-delete {
+    flex: 0 0 auto;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.magic-custom-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.magic-item-delete {
+    padding: 5px 10px;
+    font-size: .8rem;
+    box-shadow: none;
+}
+
+.custom-unique-choice {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.custom-unique-choice span {
+    flex: 1;
+}
+
+/* 特殊技能テーブル：追加行の入力欄と削除ボタンの余白を揃え、行高のずれを防ぐ。 */
+#specialSkillsTable {
+    table-layout: fixed;
+}
+
+#specialSkillsTable th:nth-child(1),
+#specialSkillsTable td:nth-child(1) {
+    width: 21.5%;
+}
+
+#specialSkillsTable th:nth-child(2),
+#specialSkillsTable td:nth-child(2) {
+    width: 24.5%;
+}
+
+#specialSkillsTable th:nth-child(3),
+#specialSkillsTable td:nth-child(3) {
+    width: 25.5%;
+}
+
+#specialSkillsTable th:nth-child(4),
+#specialSkillsTable td:nth-child(4) {
+    width: 18.5%;
+}
+
+#specialSkillsTable th:nth-child(5),
+#specialSkillsTable td:nth-child(5) {
+    width: 10%;
+}
+
+#specialSkillsTable input,
+#specialSkillsTable select {
+    box-sizing: border-box;
+    margin: 0;
+}
+
+#specialSkillsTable td {
+    vertical-align: middle;
+}
+
+#specialSkillsTable button {
+    margin: 0;
+    padding: 9px 12px;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+
+button.secondary.btn-export {
+background: #3dbb73;
+color: #ffffff;
+border-color: #3dbb73;
+}
+
+button.secondary.btn-import {
+background: #ed8b24;
+color: #ffffff;
+border-color: #ed8b24;
+}
+
+button.secondary.btn-image {
+background: #55cde0;
+color: #ffffff;
+border-color: #55cde0;
+}
+
+button.secondary.btn-share {
+background: #8050b8;
+color: #ffffff;
+border-color: #8050b8;
+}
+

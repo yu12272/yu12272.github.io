@@ -1,0 +1,25 @@
+/*
+ * モジュール: responsive.css
+ * 制御範囲: 画面幅800px以下の画像編集欄の縦並びと、650px以下の基本情報・立ち絵の一列表示。
+ */
+
+@media (max-width: 800px) {
+    .image-editor-content {
+        flex-direction: column;
+    }
+
+    .image-editor-controls {
+        width: 100%;
+    }
+
+    .image-editor-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media(max-width:650px) {
+    .portrait-wrap {
+        grid-template-columns:1fr
+    }
+}

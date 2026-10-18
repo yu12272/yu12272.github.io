@@ -1,0 +1,394 @@
+/*
+ * モジュール: view.css
+ * 制御範囲: 閲覧画面の幅とパネル配置、ステータス・魔法・技能・技・その他情報のグリッド、折りたたみ欄とトップへ戻るボタン。
+ */
+
+/* 閲覧モード専用画面の表示領域。 */
+#viewScreen {
+    display: none;
+}
+
+.view-screen {
+    width:min(1180px, calc(100% - 28px));
+    margin:0 auto;
+    padding-bottom:30px;
+}
+
+.view-panel {
+    background: #fff;
+    border: 1px solid #d8cfee;
+    border-radius: 12px;
+    padding: 0 18px 18px;
+    box-shadow: 0 4px 12px rgba(80, 50, 120, 0.08);
+}
+
+.view-panel + .view-panel {
+    margin-top: 8px;
+}
+
+.view-panel h2 {
+    margin: 0 -18px 14px;
+    padding: 10px 18px;
+    border-bottom: 1px solid #d8cfee;
+    font-size: 18px;
+}
+
+/* 下段の閲覧パネルを左右に分けるレイアウト。 */
+.view-lower-layout {
+    display: grid;
+    grid-template-columns: 1fr 2.8fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.view-left-column,
+.view-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.view-left-column .view-panel,
+.view-right-column .view-panel {
+    margin-top: 0;
+}
+
+/* ステータス値のカードグリッド。 */
+.view-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.view-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70px;
+    padding: 8px;
+    border: 1px solid #ded4e8;
+    border-radius: 8px;
+    background: #faf9fc;
+    text-align: center;
+}
+
+.view-stat-label {
+    font-size: 13px;
+    color: #6f6a60;
+}
+
+.view-stat-value {
+    margin-top: 2px;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* 基礎魔法の名前と値を並べるグリッド。 */
+.view-basic-magic-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.view-basic-magic-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70px;
+    padding: 8px;
+    border: 1px solid #ded4e8;
+    border-radius: 8px;
+    background: #faf9fc;
+    text-align: center;
+}
+
+.view-basic-magic-label {
+    font-size: 13px;
+    color: #6f6a60;
+}
+
+.view-basic-magic-value {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+
+/* 固有魔法カードの一覧。 */
+.view-unique-magic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.view-unique-magic-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 55px;
+    padding: 8px;
+    border: 1px solid #ded4e8;
+    border-radius: 8px;
+    background: #faf9fc;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* 通常技能・特殊技能の一覧レイアウト。 */
+#viewSkills,
+#viewSpecialSkills {
+    display: grid;
+    grid-template-columns:1fr;
+    gap: 6px;
+}
+
+.view-skill-item,
+.view-special-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 42px;
+    padding: 6px 10px;
+    border: 1px solid #ded4e8;
+    border-radius: 7px;
+    background: #faf9fc;
+}
+
+.view-skill-name,
+.view-special-name {
+    font-size: 14px;
+}
+
+.view-skill-value,
+.view-special-value {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* その他情報のラベルと値のカード。 */
+.view-other-item {
+    display: flex;
+    gap: 16px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #ded4e8;
+}
+
+.view-other-label {
+    min-width: 120px;
+    font-weight: bold;
+}
+
+.view-other-value {
+    flex: 1;
+    white-space: pre-wrap;
+}
+
+body.view-mode #characterSheetScreen {
+   margin-bottom:5px;
+}
+
+/* 閲覧画面のセクション折りたたみ表示。 */
+.view-collapsible {
+    padding:0 18px 18px;
+}
+
+.view-collapsible summary {
+    margin:0 -18px 14px;
+    padding:10px 18px;
+    border-bottom:1px solid #d8cfee;
+    font-size:18px;
+    font-weight:700;
+    cursor:pointer;
+    list-style:none;
+}
+
+.view-collapsible summary::-webkit-details-marker {
+    display:none;
+}
+
+.view-collapsible summary::before {
+    content:"▶";
+    display:inline-block;
+    margin-right:8px;
+    font-size:13px;
+}
+
+.view-collapsible[open] summary::before {
+    content:"▼";
+}
+
+.view-collapsible:not([open]) summary {
+    margin-bottom:0;
+    border-bottom:none;
+}
+
+.view-item-collapsible {
+    margin: 0 0 6px 0;
+    padding: 0 12px;
+    background: #fff;
+    border: 1px solid #d8cfee;
+    border-radius: 8px;
+    overflow: visible;
+}
+
+.view-item-collapsible summary {
+    margin: 0;
+    padding: 8px 0;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    list-style: none;
+    border: none;
+}
+
+.view-item-collapsible summary::-webkit-details-marker {
+    display: none;
+}
+
+.view-item-collapsible summary::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 11px;
+}
+
+.view-item-collapsible[open] summary::before {
+    content: "▼";
+}
+
+.view-item-collapsible[open] summary {
+    border-bottom: 1px solid #e5e0ee;
+    margin: 0;
+    padding-bottom: 8px;
+}
+
+.view-technique-content {
+    padding: 8px 4px 10px;
+}
+
+.view-technique-row .view-technique-value {
+    padding:8px 16px;
+}
+
+#viewScreen > * + * {
+    margin-top: 5px;
+}
+
+/* 閲覧画面右下のページ先頭ボタン。 */
+#backToTopButton {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: #7c4dff;
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 52px;
+    text-align: center;
+    cursor: pointer;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+#backToTopButton:hover {
+    background: #5936c8;
+}
+
+#backToTopButton:active {
+    transform: translateY(1px);
+}
+
+/* 技・武器詳細のラベルと値の行。 */
+.view-technique-row {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    align-items: stretch;
+    width: 100%;
+    min-width: 0;
+
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+    margin-bottom: 6px;
+}
+
+.view-technique-label {
+    display: flex;
+    align-items: center;
+
+    padding: 8px 12px;
+
+    background: var(--soft);
+    border-right: 1px solid var(--line);
+
+    font-weight: 600;
+    color: #6f6a60;
+    white-space: nowrap;
+}
+
+.view-technique-value {
+    display: flex;
+    align-items: center;
+
+    padding: 8px 12px;
+
+    min-width: 0;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.view-technique-note {
+    width: 100%;
+
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+
+    background: #fff;
+    margin-top: 6px;
+    padding-top: 10px;
+}
+
+.view-technique-note .view-technique-label {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+}
+
+.view-technique-note-text {
+    margin-top: 4px;
+    padding: 10px 12px;
+
+    background: #f7f5fa;
+    border-radius: 6px;
+
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+.view-unique-detail-effect {
+    margin: 10px 4px 4px 4px;
+    padding: 10px 12px;
+
+    border: 1px solid var(--line);
+    border-radius: 6px;
+
+    background: #fffdf9;
+
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+}
+
+
+body:not(.view-mode) #combatSkillsTable,
