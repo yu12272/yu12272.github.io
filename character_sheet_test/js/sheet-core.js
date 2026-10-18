@@ -122,8 +122,34 @@ function statName(id){
 
 function render(){
     statsGrid.innerHTML=stats.map(([id,n,r])=>`<div class="field"><label>${n}</label><input id="${id}" type="number" min="0" data-save ${r?'readonly':''} oninput="${id === 'str' ? 'hp.value = (Number(this.value) || 0) + 50;' : ''}calculateAll()"></div>`).join('');
-    specialSkills.innerHTML=special.map(([id,n,b])=>`<tr><td><b>【${n}】</b></td><td><input class="mini" id="sp_${id}" type="number" min="0" data-save oninput="calculateAll()""></td><td>${b}</td><td class="calc" id="sp_${id}_total">0</td></tr>`).join('');
+    specialSkills.innerHTML=special.map(([id,n,b])=>`<tr><td><b>【${n}】</b></td><td><input class="mini" id="sp_${id}" type="number" min="0" data-save oninput="calculateAll()"></td><td>${b}</td><td class="calc" id="sp_${id}_total">0</td><td></td></tr>`).join('');
     uniqueMagicOptions.innerHTML=uniqueNames.map(n=>`<label class="check-card"><input id="unique_${n}" type="checkbox" value="${n}" data-save data-unique onchange="calculateAll()">${n}</label>`).join('')
+}
+
+// 追加特殊技能の行を作成し、割り振り・補正ステータス・削除操作を用意します。
+function addCustomSpecialSkill(skill = {}) {
+    const row = document.createElement('tr');
+    row.dataset.customSpecialSkill = '';
+    const base = statOpts.map(([value, label]) =>
+        `<option value="${value}" ${value === (skill.base || 'none') ? 'selected' : ''}>${label}</option>`
+    ).join('');
+    row.innerHTML = `
+        <td><input class="mini" type="text" maxlength="40" aria-label="追加特殊技能名" placeholder="技能名" data-custom-special-name value="${E(skill.name || '')}"></td>
+        <td><input class="mini" type="number" min="0" aria-label="追加特殊技能の割り振り" data-custom-special-allocation value="${E(skill.allocation ?? '')}"></td>
+        <td><select class="mini" aria-label="追加特殊技能の補正ステータス" data-custom-special-base>${base}</select></td>
+        <td class="calc" data-custom-special-total>0</td>
+        <td><button type="button" class="secondary" aria-label="追加特殊技能を削除">削除</button></td>
+    `;
+    row.querySelectorAll('input, select').forEach(input => {
+        input.addEventListener('input', calculateAll);
+        input.addEventListener('change', calculateAll);
+    });
+    row.querySelector('button').addEventListener('click', () => {
+        row.remove();
+        calculateAll();
+    });
+    specialSkills.appendChild(row);
+    calculateAll();
 }
 
 
@@ -216,7 +242,7 @@ function calculateAll(){
                     onchange="setSkillModifier('combat','${x[0]}',this.value)"
                 >
             </td>
-            <td class="calc">${v.combat[x[0]]}</td>
+            <td class="calc"><span class="skill-success-value">${v.combat[x[0]]}</span></td>
         </tr>
     `).join('');
 
@@ -243,12 +269,19 @@ function calculateAll(){
                     onchange="setSkillModifier('search','${x[0]}',this.value)"
                 >
             </td>
-            <td class="calc">${v.search[x[0]]}</td>
+            <td class="calc"><span class="skill-success-value">${v.search[x[0]]}</span></td>
         </tr>
     `).join('');
 
     special.forEach(([id,n])=>document.getElementById(`sp_${id}_total`).textContent=v.special[n]);
-    let used=special.reduce((a,[id])=>a+N(`sp_${id}`),0);
+    document.querySelectorAll('#specialSkills [data-custom-special-skill]').forEach(row => {
+        const base = row.querySelector('[data-custom-special-base]').value;
+        row.querySelector('[data-custom-special-total]').textContent =
+            Number(row.querySelector('[data-custom-special-allocation]').value || 0) + (base === 'none' ? 0 : v[base]);
+    });
+    let used=special.reduce((a,[id])=>a+N(`sp_${id}`),0) +
+        [...document.querySelectorAll('#specialSkills [data-custom-special-allocation]')]
+            .reduce((total, input) => total + Number(input.value || 0), 0);
     specialUsed.textContent=used;msg('specialMessage',used>100?'100点を超えています。':'範囲内です。',used>100?'warning':'success');
     let bt = N('basicMagicTotal');
     let bu =

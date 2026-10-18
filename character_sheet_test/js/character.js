@@ -99,6 +99,16 @@ function cocofolia(){
                 [N('sp_jump'), `${cmd}<=${N('sp_jump')}+{筋力} 【跳躍】`]
             ];
 
+            document.querySelectorAll('#specialSkills [data-custom-special-skill]').forEach(row => {
+                const allocation = Number(row.querySelector('[data-custom-special-allocation]').value || 0);
+                const name = row.querySelector('[data-custom-special-name]').value.trim();
+                const base = row.querySelector('[data-custom-special-base]').value;
+                if (allocation > 0 && name) {
+                    const bonus = base === 'none' ? '' : `+{${statName(base)}}`;
+                    specialSkillLines.push([allocation, `${cmd}<=${allocation}${bonus} 【${name}】`]);
+                }
+            });
+
             const activeSkills = specialSkillLines
                 .filter(([allocation]) => allocation > 0)
                 .map(([, line]) => line);

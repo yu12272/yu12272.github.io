@@ -139,10 +139,11 @@ function renderViewSpecialSkills() {
     if (!table) return;
     table.querySelectorAll('tr').forEach(row => {
         const nameElement = row.querySelector('td');
-        const allocationElement = row.querySelector('input.mini');
+        const allocationElement = row.querySelector('[data-custom-special-allocation]') || row.querySelector('input.mini');
         const valueElement = row.querySelector('.calc');
         if (!nameElement || !valueElement) return;
-        const name = nameElement.textContent.trim();
+        const customName = row.querySelector('[data-custom-special-name]');
+        const name = customName ? customName.value.trim() : nameElement.textContent.trim();
         const allocation = Number(
             allocationElement?.value || 0
         );

@@ -36,6 +36,13 @@ function collect(){
         name:field.dataset.magicName,
         value:field.querySelector('input').value
     }));
+    d.customSpecialSkills = [
+        ...document.querySelectorAll('#specialSkills [data-custom-special-skill]')
+    ].map(row => ({
+        name: row.querySelector('[data-custom-special-name]').value,
+        allocation: row.querySelector('[data-custom-special-allocation]').value,
+        base: row.querySelector('[data-custom-special-base]').value
+    }));
     d.techniques=actionData('.technique');
     d.weapons=actionData('.weapon');
     return d;
@@ -70,6 +77,8 @@ function apply(d){
     showPortrait();
 
     document.querySelectorAll('[data-save]').forEach(e=>{if(d[e.id]!==undefined)e.type==='checkbox'?e.checked=!!d[e.id]:e.value=d[e.id]});
+    document.querySelectorAll('#specialSkills [data-custom-special-skill]').forEach(row => row.remove());
+    (d.customSpecialSkills || []).forEach(addCustomSpecialSkill);
     document.querySelectorAll(
         '#uniqueMagicOptions .custom-unique-magic'
     ).forEach(field => field.remove());
@@ -140,6 +149,12 @@ async function shareByUrl(){
     data.customBasicMagics = (data.customBasicMagics || []).map(m => [
         m.name,
         m.value
+    ]);
+
+    data.customSpecialSkills = (data.customSpecialSkills || []).map(skill => [
+        skill.name,
+        skill.allocation,
+        skill.base
     ]);
 
     data.basic = [

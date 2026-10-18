@@ -163,6 +163,13 @@ async function loadFromUrl(){
                 value: m[1]
             }));
 
+        character.customSpecialSkills =
+            (character.customSpecialSkills || []).map(skill => ({
+                name: skill[0],
+                allocation: skill[1],
+                base: skill[2]
+            }));
+
         const basic = character.basic || [];
 
         character.charName = basic[0] ?? '';
