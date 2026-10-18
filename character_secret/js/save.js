@@ -112,227 +112,25 @@ function exportJson(){
     URL.revokeObjectURL(u)
 }
 
-async function shareByUrl(){
-    const data = collect();
-    delete data.portraitData;
+async function shareByUrl() {
+    const saved = await saveCharacterToAccount();
+    if (!saved) return;
 
-    data.techniques = (data.techniques || []).map(t => [
-        t.name,
-        t.ref,
-        t.mult,
-        t.add,
-        t.damage,
-        t.mp,
-        t.maintainMp,
-        t.note
-    ]);
-
-    data.weapons = (data.weapons || []).map(w => [
-        w.name,
-        w.ref,
-        w.mult,
-        w.add,
-        w.damage,
-        w.note
-    ]);
-
-    data.magics = (data.magics || []).map(m => [
-        m.magicName,
-        m.magicEffect
-    ]);
-
-    data.customUniqueMagics = (data.customUniqueMagics || []).map(m => [
-        m.name,
-        m.checked
-    ]);
-
-    data.customBasicMagics = (data.customBasicMagics || []).map(m => [
-        m.name,
-        m.value
-    ]);
-
-    data.customSpecialSkills = (data.customSpecialSkills || []).map(skill => [
-        skill.name,
-        skill.allocation,
-        skill.base
-    ]);
-
-    data.basic = [
-        data.charName,
-        data.age,
-        data.job,
-        data.originSetting
-    ];
-
-    delete data.charName;
-    delete data.age;
-    delete data.job;
-    delete data.originSetting;
-
-    data.stats = [
-        data.str,
-        data.acc,
-        data.agi,
-        data.know,
-        data.think,
-        data.looks,
-        data.luck,
-        data.emotion,
-        data.mp,
-        data.hp
-    ];
-
-    delete data.str;
-    delete data.acc;
-    delete data.agi;
-    delete data.know;
-    delete data.think;
-    delete data.looks;
-    delete data.luck;
-    delete data.emotion;
-    delete data.mp;
-    delete data.hp;
-
-    data.specialSkills = [
-        data.sp_disguise,
-        data.sp_voice,
-        data.sp_negotiate,
-        data.sp_authority,
-        data.sp_charm,
-        data.sp_psychology,
-        data.sp_steal,
-        data.sp_shooting,
-        data.sp_jump
-    ];
-
-    delete data.sp_disguise;
-    delete data.sp_voice;
-    delete data.sp_negotiate;
-    delete data.sp_authority;
-    delete data.sp_charm;
-    delete data.sp_psychology;
-    delete data.sp_steal;
-    delete data.sp_shooting;
-    delete data.sp_jump;
-
-    data.basicMagic = [
-        data.basicMagicTotal,
-        data.heatMagic,
-        data.bodyMagic,
-        data.controlMagic
-    ];
-
-    delete data.basicMagicTotal;
-    delete data.heatMagic;
-    delete data.bodyMagic;
-    delete data.controlMagic;
-
-    data.uniqueMagics = [
-        data['unique_変身'],
-        data['unique_変化'],
-        data['unique_創造'],
-        data['unique_命令'],
-        data['unique_回復'],
-        data['unique_光'],
-        data['unique_結界'],
-        data['unique_異常発達'],
-        data['unique_冒涜'],
-        data['unique_召喚']
-    ];
-
-    delete data['unique_変身'];
-    delete data['unique_変化'];
-    delete data['unique_創造'];
-    delete data['unique_命令'];
-    delete data['unique_回復'];
-    delete data['unique_光'];
-    delete data['unique_結界'];
-    delete data['unique_異常発達'];
-    delete data['unique_冒涜'];
-    delete data['unique_召喚'];
-
-    data.other = [
-        data.items,
-        data.personality,
-        data.memo,
-        data.characterMemo
-    ];
-
-    delete data.items;
-    delete data.personality;
-    delete data.memo;
-    delete data.characterMemo;
-
-
-
-    function removeEmpty(value){
-        if(Array.isArray(value)){
-            return value
-                .map(removeEmpty)
-                .filter(item => item !== undefined);
-        }
-        if(value && typeof value === 'object'){
-            const result = {};
-            Object.entries(value).forEach(([key, item]) => {
-                const cleaned = removeEmpty(item);
-                if(
-                    cleaned !== undefined &&
-                    cleaned !== ''
-                ){
-                    result[key] = cleaned;
-                }
-            });
-            return result;
-        }
-        return value;
+    const id = accountCharacterId();
+    if (!id) {
+        msg('saveMessage', '共有IDを取得できませんでした。', 'warning');
+        return;
     }
 
-    const compactData = removeEmpty(data);
-    const json = JSON.stringify(compactData);
+    const shareUrl = new URL(location.origin + location.pathname);
+    shareUrl.searchParams.set('shareId', id);
 
-    const stream = new Blob([json])
-        .stream()
-        .pipeThrough(new CompressionStream('gzip'));
-
-    const compressed =
-        new Uint8Array(
-            await new Response(stream).arrayBuffer()
-        );
-
-    let binary = '';
-    const chunkSize = 0x8000;
-
-    for(let i = 0; i < compressed.length; i += chunkSize){
-        binary += String.fromCharCode(
-            ...compressed.subarray(i, i + chunkSize)
-        );
+    try {
+        await navigator.clipboard.writeText(shareUrl.toString());
+        msg('saveMessage', '共有URLをコピーしました。', 'success');
+    } catch {
+        prompt('共有URLをコピーしてください。', shareUrl.toString());
     }
-
-    const encoded = btoa(binary)
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-
-    const url =
-        location.origin +
-        location.pathname +
-        '#' +
-        encoded;
-
-    navigator.clipboard.writeText(url)
-        .then(() => {
-            msg(
-                'saveMessage',
-                '共有URLをコピーしました。',
-                'success'
-            );
-        })
-        .catch(() => {
-            prompt(
-                '共有URLをコピーしてください。',
-                url
-            );
-        });
 }
 
 
@@ -362,14 +160,29 @@ async function accountApi(path,options={}){
  const result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error||"通信エラー "+response.status);return result;
 }
 function accountCharacterId(){return new URLSearchParams(location.search).get("characterId");}
+async function loadSharedCharacterFromUrl() {
+ const id = new URLSearchParams(location.search).get("shareId");
+ if (!id) return;
+ try {
+  const response = await fetch(ACCOUNT_API_BASE + "/api/share/" + encodeURIComponent(id));
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw Error(result.error || "共有キャラクターを読み込めませんでした。");
+  apply(result.character.characterData || {});
+  if (!charName.value) charName.value = result.character.characterName || "";
+  setMode("view");
+  msg("saveMessage", "共有キャラクターを読み込みました。", "success");
+ } catch (error) {
+  msg("saveMessage", error.message, "warning");
+ }
+}
 async function loadCharacterFromAccount(){
  const id=accountCharacterId();if(!id)return;
  try{const result=await accountApi("/api/characters/"+encodeURIComponent(id));apply(result.character.characterData||{});if(!charName.value)charName.value=result.character.characterName||"";msg("saveMessage","アカウントから読み込みました。","success");}
  catch(error){msg("saveMessage",error.message,"warning");if(error.message==="ログインが必要です")location.href="login.html";}
 }
 async function saveCharacterToAccount(){
- const name=charName.value.trim();if(!name){msg("saveMessage","先にキャラクター名を入力してください。","warning");charName.focus();return;}
+ const name=charName.value.trim();if(!name){msg("saveMessage","先にキャラクター名を入力してください。","warning");charName.focus();return false;}
  const id=accountCharacterId(),path=id?"/api/characters/"+encodeURIComponent(id):"/api/characters";
- try{const result=await accountApi(path,{method:id?"PUT":"POST",body:JSON.stringify({characterName:name,characterData:collect()})});if(!id&&result.character?.characterId){const next=new URL(location.href);next.searchParams.set("characterId",result.character.characterId);history.replaceState(null,"",next);}msg("saveMessage","アカウントに保存しました。","success");}
- catch(error){msg("saveMessage",error.message,"warning");}
+ try{const result=await accountApi(path,{method:id?"PUT":"POST",body:JSON.stringify({characterName:name,characterData:collect()})});if(!id&&result.character?.characterId){const next=new URL(location.href);next.searchParams.set("characterId",result.character.characterId);history.replaceState(null,"",next);}msg("saveMessage","アカウントに保存しました。","success");return true;}
+ catch(error){msg("saveMessage",error.message,"warning");return false;}
 }

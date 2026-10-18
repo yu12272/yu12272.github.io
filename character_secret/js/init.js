@@ -11,7 +11,10 @@ createImageDisplayOptions();
 showPortrait();
 calculateAll();
 
-if (new URLSearchParams(location.search).has("characterId")) {
+const query = new URLSearchParams(location.search);
+if (query.has("shareId")) {
+    loadSharedCharacterFromUrl();
+} else if (query.has("characterId")) {
     loadCharacterFromAccount();
 } else {
     loadFromUrl();
