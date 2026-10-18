@@ -76,8 +76,8 @@
           result.user.username,
         );
 
-        message.textContent =
-          `ログインしました（${result.user.username}）。`;
+        message.textContent = "ログインしました。マイページへ移動します。";
+        location.href = "./mypage.html";
       } catch (error) {
         message.textContent = error.message;
       } finally {
