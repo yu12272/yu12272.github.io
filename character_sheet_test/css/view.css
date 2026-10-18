@@ -187,7 +187,7 @@
 }
 
 body.view-mode #characterSheetScreen {
-   margin-bottom:20px;
+   margin-bottom:5px;
 }
 
 /* 閲覧画面のセクション折りたたみ表示。 */
@@ -274,7 +274,7 @@ body.view-mode #characterSheetScreen {
 }
 
 #viewScreen > * + * {
-    margin-top: 7px;
+    margin-top: 5px;
 }
 
 /* 閲覧画面右下のページ先頭ボタン。 */
