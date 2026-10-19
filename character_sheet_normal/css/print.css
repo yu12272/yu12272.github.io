@@ -1,0 +1,20 @@
+/*
+ * モジュール: print.css
+ * 制御範囲: 印刷時の背景、操作部品の非表示、セクションの影、シート幅。
+ */
+
+@media print {
+    body {
+        background:#fff
+    }
+    .toolbar,button,.no-print,input[type=file] {
+        display:none!important
+    }
+    section,header {
+        box-shadow:none
+    }
+    main {
+        width:100%
+    }
+}
+
