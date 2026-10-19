@@ -12,10 +12,24 @@ showPortrait();
 calculateAll();
 
 const query = new URLSearchParams(location.search);
-if (query.has("shareId")) {
-    loadSharedCharacterFromUrl();
-} else if (query.has("characterId")) {
-    loadCharacterFromAccount();
-} else {
-    loadFromUrl();
-}
+(async () => {
+    if (query.has("shareId")) {
+        await loadSharedCharacterFromUrl();
+    } else if (query.has("characterId")) {
+        await loadCharacterFromAccount();
+    } else {
+        await loadFromUrl();
+    }
+
+    if (query.get("view") === "1") {
+        setMode("view");
+    }
+
+    if (query.get("output") === "cocofolia") {
+        await outputCocofolia();
+        document.getElementById("cocofoliaOutput")?.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+        });
+    }
+})();
