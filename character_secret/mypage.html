@@ -103,6 +103,145 @@
       return link;
     }
 
+    function buildCocofoliaCharacter(characterData) {
+      const data = characterData || {};
+      const number = key => Number(data[key] || 0);
+      const modifiers = data.skillModifiers || {};
+      const labels = {
+        str: "筋力", acc: "正確性", agi: "俊敏性", know: "知識",
+        think: "思考力", looks: "容姿", luck: "幸運", emotion: "感情値"
+      };
+      const values = {
+        str: number("str"), acc: number("acc"), agi: number("agi"),
+        know: number("know"), think: number("think"), looks: number("looks"),
+        luck: number("luck"), emotion: number("emotion"), mp: number("mp"), hp: number("hp")
+      };
+      values.combat = {
+        拳: values.acc + 60 + Number(modifiers.combat?.拳 || 0),
+        蹴り: values.acc + 30 + Number(modifiers.combat?.蹴り || 0),
+        回避: Math.min(values.acc + values.agi, 90) + Number(modifiers.combat?.回避 || 0),
+        カウンター: values.acc + Number(modifiers.combat?.カウンター || 0),
+        弾き: values.acc + Number(modifiers.combat?.弾き || 0)
+      };
+      values.search = {
+        観察: values.acc + 40 + Number(modifiers.search?.観察 || 0),
+        分析: values.think + 30 + Number(modifiers.search?.分析 || 0),
+        幸運: values.luck + Number(modifiers.search?.幸運 || 0),
+        知識: values.know * 3 + Number(modifiers.search?.知識 || 0),
+        五感: values.acc * 3 + Number(modifiers.search?.五感 || 0),
+        追跡: values.agi + values.acc + values.luck + Number(modifiers.search?.追跡 || 0)
+      };
+
+      const command = data.cocDiceCommand || "CCB";
+      const withModifier = (category, skill) => {
+        const value = Number(modifiers[category]?.[skill] || 0);
+        return value === 0 ? "" : value > 0 ? `+${value}` : String(value);
+      };
+      const lines = [
+        "// ステータス判定",
+        ...[["筋力", values.str], ["正確性", values.acc], ["俊敏性", values.agi], ["知識", values.know], ["思考力", values.think], ["容姿", values.looks], ["幸運", values.luck], ["感情値", values.emotion]].map(([name]) => `${command}<={${name}} 【${name}】`),
+        "// 通常戦闘技能",
+        `${command}<={正確性}+60${withModifier("combat", "拳")} 【拳】`,
+        `${command}<={正確性}+30${withModifier("combat", "蹴り")} 【蹴り】`,
+        `${command}<=min({正確性}+{俊敏性},90)${withModifier("combat", "回避")} 【回避】`,
+        `${command}<={正確性}${withModifier("combat", "カウンター")} 【カウンター】`,
+        `${command}<={正確性}${withModifier("combat", "弾き")} 【弾き】`,
+        "// 探索技能",
+        `${command}<={正確性}+40${withModifier("search", "観察")} 【観察】`,
+        `${command}<={思考力}+30${withModifier("search", "分析")} 【分析】`,
+        `${command}<={幸運}${withModifier("search", "幸運")} 【幸運】`,
+        `${command}<={知識}*3${withModifier("search", "知識")} 【知識】`,
+        `${command}<={正確性}*3${withModifier("search", "五感")} 【五感】`,
+        `${command}<={俊敏性}+{正確性}+{幸運}${withModifier("search", "追跡")} 【追跡】`
+      ];
+
+      const specialSkills = [
+        ["sp_disguise", `${command}<=${number("sp_disguise")} 【変装】`],
+        ["sp_voice", `${command}<=${number("sp_voice")}+{正確性} 【変声】`],
+        ["sp_negotiate", `${command}<=${number("sp_negotiate")} 【交渉】`],
+        ["sp_authority", `${command}<=${number("sp_authority")} 【権威】`],
+        ["sp_charm", `${command}<=${number("sp_charm")}+{容姿} 【魅了】`],
+        ["sp_psychology", `${command}<=${number("sp_psychology")}+{思考力} 【心理学】`],
+        ["sp_steal", `${command}<=${number("sp_steal")}+{正確性} 【盗み】`],
+        ["sp_shooting", `${command}<=${number("sp_shooting")} 【射撃】`],
+        ["sp_jump", `${command}<=${number("sp_jump")}+{筋力} 【跳躍】`]
+      ].filter(([key]) => number(key) > 0).map(([, line]) => line);
+
+      for (const skill of data.customSpecialSkills || []) {
+        const allocation = Number(skill.allocation || 0);
+        const name = String(skill.name || "").trim();
+        if (allocation > 0 && name) {
+          const base = skill.base && skill.base !== "none" ? `+{${labels[skill.base] || "なし"}}` : "";
+          specialSkills.push(`${command}<=${allocation}${base} 【${name}】`);
+        }
+      }
+      if (specialSkills.length) lines.push("// 特殊技能", ...specialSkills);
+
+      const referenceExpression = (reference, multiplier, addition) => {
+        const base = !reference || reference === "none" ? "0" : `{${labels[reference] || "なし"}}`;
+        const mult = Number(multiplier ?? 1);
+        const add = Number(addition || 0);
+        let expression = mult === 1 ? base : `(${base})*${mult}`;
+        if (add !== 0) expression += add > 0 ? `+${add}` : String(add);
+        return expression;
+      };
+      const techniques = (data.techniques || []).filter(item => item.name || item.damage || item.note || Number(item.add));
+      if (techniques.length) lines.push("// 技");
+      for (const technique of techniques) {
+        const name = technique.name || "名称未設定";
+        lines.push(`${command}<=${referenceExpression(technique.ref, technique.mult, technique.add)} 【${name}】`);
+        if (technique.mp !== "") lines.push(`:MP-${technique.mp} 【消費MP:${name}】`);
+        if (technique.maintainMp !== "") lines.push(`:MP-${technique.maintainMp} 【維持MP:${name}】`);
+        if (technique.damage) lines.push(`${technique.damage} 【${name}・ダメージ】`);
+      }
+
+      const weapons = (data.weapons || []).filter(item => item.name || item.damage || item.note || Number(item.add));
+      if (weapons.length) lines.push("// 武器");
+      for (const weapon of weapons) {
+        const name = weapon.name || "名称未設定";
+        lines.push(`${command}<=${referenceExpression(weapon.ref, weapon.mult, weapon.add)} 【${name}】`);
+        if (weapon.damage) lines.push(`${weapon.damage} 【${name}・ダメージ】`);
+      }
+
+      return {
+        kind: "character",
+        data: {
+          name: data.charName || "ダイス振り男",
+          initiative: values.agi,
+          externalUrl: null,
+          iconUrl: null,
+          params: [
+            ["筋力", values.str], ["正確性", values.acc], ["俊敏性", values.agi],
+            ["知識", values.know], ["思考力", values.think], ["容姿", values.looks],
+            ["幸運", values.luck], ["感情値", values.emotion], ["総魔力量", values.mp]
+          ].map(([label, value]) => ({ label, value: String(value) })),
+          status: [
+            { label: "HP", value: values.hp, max: values.hp },
+            { label: "MP", value: values.mp, max: values.mp },
+            { label: "感情値", value: values.emotion, max: 100 }
+          ],
+          commands: lines.join("\n"),
+          memo: [data.characterMemo].join("\n")
+        }
+      };
+    }
+
+    async function copyCocofoliaCharacter(character) {
+      msg.textContent = "ココフォリア駒データを取得中…";
+      try {
+        const result = await call("/api/characters/" + encodeURIComponent(character.character_id));
+        const text = JSON.stringify(buildCocofoliaCharacter(result.character?.characterData || {}));
+        try {
+          await navigator.clipboard.writeText(text);
+          msg.textContent = "「" + (character.character_name || "名前なし") + "」のココフォリア駒データをコピーしました。";
+        } catch {
+          prompt("クリップボードにコピーできませんでした。下の内容をコピーしてください。", text);
+        }
+      } catch (error) {
+        failed(error);
+      }
+    }
+
     async function refresh() {
       list.replaceChildren();
       msg.textContent = "読み込み中…";
@@ -127,7 +266,7 @@
           const portrait = document.createElement("img");
           portrait.className = "portrait";
           portrait.alt = (character.character_name || "キャラクター") + "の立ち絵";
-          portrait.loading = "lazy";
+          portrait.loading = "eager";
           portrait.hidden = true;
           info.append(placeholder, portrait);
 
@@ -151,9 +290,14 @@
           actions.className = "actions item-actions";
           actions.append(
             actionLink("編集", sheetUrl(character)),
-            actionLink("閲覧", sheetUrl(character, { view: "1" })),
-            actionLink("駒出力", sheetUrl(character, { output: "cocofolia" }), true)
+            actionLink("閲覧", sheetUrl(character, { view: "1" }))
           );
+
+          const outputButton = document.createElement("button");
+          outputButton.type = "button";
+          outputButton.className = "secondary";
+          outputButton.textContent = "ココフォリア駒出力";
+          outputButton.onclick = () => copyCocofoliaCharacter(character);
 
           const share = document.createElement("button");
           share.type = "button";
@@ -167,7 +311,7 @@
           removeButton.textContent = "削除";
           removeButton.onclick = () => removeCharacter(character);
 
-          actions.append(share, removeButton);
+          actions.append(outputButton, share, removeButton);
           item.append(info, actions);
           list.append(item);
         }
