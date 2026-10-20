@@ -105,11 +105,47 @@ function apply(d){
     updateViewMode();
 }
 
+let savedCharacterSnapshot = null;
+let unloadConfirmed = false;
+
+function getCharacterSnapshot() {
+    return JSON.stringify(collect());
+}
+
+function markCharacterSaved(snapshot = getCharacterSnapshot()) {
+    savedCharacterSnapshot = snapshot;
+}
+
+function hasUnsavedCharacterChanges() {
+    return savedCharacterSnapshot !== null &&
+        savedCharacterSnapshot !== getCharacterSnapshot();
+}
+
+function returnToMypage() {
+    if (hasUnsavedCharacterChanges() &&
+        !confirm('編集した内容がJSON書き出しまたはアカウント保存されていません。保存せずにマイページへ戻りますか？')) {
+        return;
+    }
+
+    unloadConfirmed = true;
+    location.href = 'mypage.html';
+}
+
+window.addEventListener('beforeunload', event => {
+    if (unloadConfirmed || !hasUnsavedCharacterChanges()) return;
+    event.preventDefault();
+    event.returnValue = '';
+});
+
+window.addEventListener('pageshow', () => {
+    unloadConfirmed = false;
+});
+
 function exportJson(){
-    let d=collect(),a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
+    let d=collect(),snapshot=JSON.stringify(d),a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));
     a.href=u;
     a.download=(charName.value||'character')+'.json';a.click();
-    URL.revokeObjectURL(u)
+    URL.revokeObjectURL(u);markCharacterSaved(snapshot)
 }
 
 async function shareByUrl() {
@@ -219,9 +255,10 @@ async function prepareAccountCharacterData() {
  throw Error("立ち絵を含むデータが大きすぎます。立ち絵画像を小さくしてください。");
 }
 async function saveCharacterToAccount(){
+ const snapshot = getCharacterSnapshot();
  const name=charName.value.trim();if(!name){msg("saveMessage","先にキャラクター名を入力してください。","warning");charName.focus();return false;}
  const id=accountCharacterId(),path=id?"/api/characters/"+encodeURIComponent(id):"/api/characters";
- try{const characterData=await prepareAccountCharacterData();const result=await accountApi(path,{method:id?"PUT":"POST",body:JSON.stringify({characterName:name,characterData})});if(!id&&result.character?.characterId){const next=new URL(location.href);next.searchParams.set("characterId",result.character.characterId);history.replaceState(null,"",next);}msg("saveMessage","アカウントに保存しました。","success");return true;}
+ try{const characterData=await prepareAccountCharacterData();const result=await accountApi(path,{method:id?"PUT":"POST",body:JSON.stringify({characterName:name,characterData})});if(!id&&result.character?.characterId){const next=new URL(location.href);next.searchParams.set("characterId",result.character.characterId);history.replaceState(null,"",next);}markCharacterSaved(snapshot);msg("saveMessage","アカウントに保存しました。","success");return true;}
  catch(error){msg("saveMessage",error.message,"warning");return false;}
 }
 

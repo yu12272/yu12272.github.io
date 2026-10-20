@@ -32,4 +32,6 @@ const query = new URLSearchParams(location.search);
             block: "center"
         });
     }
+    markCharacterSaved();
+
 })();
