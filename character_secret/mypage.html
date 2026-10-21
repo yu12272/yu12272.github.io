@@ -266,7 +266,7 @@
           const portrait = document.createElement("img");
           portrait.className = "portrait";
           portrait.alt = (character.character_name || "キャラクター") + "の立ち絵";
-          portrait.loading = "lazy";
+          portrait.loading = "eager";
           portrait.hidden = true;
           const thumbnail = character.portrait_thumbnail;
           if (typeof thumbnail === "string" && thumbnail.startsWith("data:image/")) {
