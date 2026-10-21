@@ -223,8 +223,27 @@ async function loadCharacterFromAccount(){
  catch(error){msg("saveMessage",error.message,"warning");if(error.message==="ログインが必要です")location.href="login.html";}
 }
 const MAX_ACCOUNT_CHARACTER_BYTES = 1400000;
+async function createPortraitThumbnail(portraitData) {
+ if (!portraitData) return "";
+ const image = new Image();
+ await new Promise((resolve, reject) => {
+  image.onload = resolve;
+  image.onerror = () => reject(Error("立ち絵サムネイルを作成できませんでした。"));
+  image.src = portraitData;
+ });
+ const maxSize = 160;
+ const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+ const canvas = document.createElement("canvas");
+ canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+ canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+ const context = canvas.getContext("2d");
+ if (!context) throw Error("立ち絵サムネイルを作成できませんでした。");
+ context.drawImage(image, 0, 0, canvas.width, canvas.height);
+ return canvas.toDataURL("image/webp", 0.7);
+}
 async function prepareAccountCharacterData() {
  const data = collect();
+ data.portraitThumbnail = await createPortraitThumbnail(data.portraitData);
  const sizeInBytes = () => new TextEncoder().encode(JSON.stringify(data)).byteLength;
  if (sizeInBytes() <= MAX_ACCOUNT_CHARACTER_BYTES) return data;
  if (!data.portraitData) throw Error("キャラクターデータが大きすぎます。");

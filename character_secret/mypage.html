@@ -266,25 +266,22 @@
           const portrait = document.createElement("img");
           portrait.className = "portrait";
           portrait.alt = (character.character_name || "キャラクター") + "の立ち絵";
-          portrait.loading = "eager";
+          portrait.loading = "lazy";
           portrait.hidden = true;
+          const thumbnail = character.portrait_thumbnail;
+          if (typeof thumbnail === "string" && thumbnail.startsWith("data:image/")) {
+            portrait.onload = () => { portrait.hidden = false; placeholder.hidden = true; };
+            portrait.onerror = () => { portrait.hidden = true; };
+            portrait.src = thumbnail;
+          } else if (character.has_portrait) {
+            placeholder.textContent = "サムネイル未登録（編集後に保存してください）";
+          }
           info.append(placeholder, portrait);
 
           const name = document.createElement("span");
           name.className = "name";
           name.textContent = character.character_name || "名前なし";
           info.append(name);
-
-          call("/api/characters/" + encodeURIComponent(character.character_id))
-            .then(result => {
-              const image = result.character?.characterData?.portraitData;
-              if (typeof image === "string" && image.startsWith("data:image/")) {
-                portrait.onload = () => { portrait.hidden = false; placeholder.hidden = true; };
-                portrait.onerror = () => { portrait.hidden = true; };
-                portrait.src = image;
-              }
-            })
-            .catch(() => {});
 
           const actions = document.createElement("span");
           actions.className = "actions item-actions";
