@@ -91,6 +91,11 @@ async function loadFromUrl(){
 
     try{
         let base64 = location.hash.substring(1);
+        const MAX_COMPRESSED_BYTES = 2 * 1024 * 1024;
+        const MAX_DECOMPRESSED_BYTES = 2 * 1024 * 1024;
+        if (base64.length > Math.ceil(MAX_COMPRESSED_BYTES * 4 / 3) + 4) {
+            throw new Error('共有データが大きすぎます。');
+        }
 
         base64 = base64
             .replace(/-/g, '+')
@@ -107,19 +112,38 @@ async function loadFromUrl(){
             char => char.charCodeAt(0)
         );
 
-        const stream = new Blob([compressed])
+        if (compressed.byteLength > MAX_COMPRESSED_BYTES) {
+            throw new Error('共有データが大きすぎます。');
+        }
+
+        const reader = new Blob([compressed])
             .stream()
-            .pipeThrough(new DecompressionStream('gzip'));
+            .pipeThrough(new DecompressionStream('gzip'))
+            .getReader();
+        const chunks = [];
+        let decompressedBytes = 0;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            decompressedBytes += value.byteLength;
+            if (decompressedBytes > MAX_DECOMPRESSED_BYTES) {
+                await reader.cancel();
+                throw new Error('展開後の共有データが大きすぎます。');
+            }
+            chunks.push(value);
+        }
+        const bytes = new Uint8Array(decompressedBytes);
+        let offset = 0;
+        for (const chunk of chunks) {
+            bytes.set(chunk, offset);
+            offset += chunk.byteLength;
+        }
 
-        const bytes =
-            new Uint8Array(
-                await new Response(stream).arrayBuffer()
-            );
-
-        const data =
-            new TextDecoder().decode(bytes);
-
+        const data = new TextDecoder().decode(bytes);
         const character = JSON.parse(data);
+        if (!character || typeof character !== 'object' || Array.isArray(character)) {
+            throw new Error('共有データの形式が正しくありません。');
+        }
 
         character.techniques =
             (character.techniques || []).map(t => ({

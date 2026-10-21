@@ -14,13 +14,13 @@ function rollStats(){
     emotion.value=roll(10,6);
     mp.value=originSetting.value==='始祖'?roll(1,100)+20:Math.max(0,roll(1,100)-1);
     hp.value=N('str')+50;
-    calculateAll()
+calculateAll('stats')
 }
 
 
 function clearStats(){
     stats.forEach(([id])=>document.getElementById(id).value='');
-    calculateAll()
+calculateAll('stats')
 }
     
     
@@ -32,8 +32,7 @@ function rollBasicMagic(){
     ).forEach(input => {
         input.value = 0;
     });
-
-    calculateAll();
+calculateAll('basic')
 }
 
 
@@ -79,15 +78,14 @@ function addBasicMagic(name = '', value = '') {
     input.min = '0';
     input.value = value;
     input.dataset.basicMagicValue = '';
-    input.oninput = calculateAll;
+    input.oninput = () => calculateAll('basic');
 
     heading.append(label, deleteButton);
     field.appendChild(heading);
     field.appendChild(input);
 
     grid.appendChild(field);
-
-    calculateAll();
+calculateAll('basic')
 }
 
 // 入力欄から基礎魔法を追加し、追加成功時は入力欄を空にします。
@@ -109,7 +107,7 @@ function removeBasicMagicField(button) {
     const field = button.closest('.custom-basic-magic');
     if (!field || !confirm(`「${field.dataset.magicName}」を削除しますか？`)) return;
     field.remove();
-    calculateAll();
+calculateAll('basic')
 }
 
 
@@ -148,7 +146,7 @@ function addCustomUniqueMagic(name = '', checked = false) {
     input.checked = checked;
     input.dataset.unique = '';
     input.dataset.customUnique = '';
-    input.onchange = calculateAll;
+    input.onchange = () => calculateAll('unique');
 
     const choiceLabel = document.createElement('label');
     choiceLabel.className = 'custom-unique-choice';
@@ -166,8 +164,7 @@ function addCustomUniqueMagic(name = '', checked = false) {
     card.append(choiceLabel, deleteButton);
 
     options.appendChild(card);
-
-    calculateAll();
+calculateAll('unique')
 }
 
 
@@ -190,7 +187,7 @@ function removeCustomUniqueMagic(button) {
     const card = button?.closest('.custom-unique-magic');
     if (!card || !confirm(`「${card.dataset.magicName}」を削除しますか？`)) return;
     card.remove();
-    calculateAll();
+calculateAll('unique')
 }
 
 
@@ -198,7 +195,7 @@ function removeCustomUniqueMagic(button) {
 function rollUniqueMagicCount(){
     uniqueMagicCount.value=roll(1,4);
     document.querySelectorAll('[data-unique]').forEach(x=>x.checked=false);
-    calculateAll()
+calculateAll('unique')
 }
 
 
@@ -221,7 +218,7 @@ function addUniqueMagicDetail(d={}){
             削除
         </button>`;
     uniqueMagicDetails.appendChild(c)
-    calculateAll();
+calculateAll('unique')
 }
             
 
@@ -276,14 +273,14 @@ function actionCard(type, d = {}) {
 
             <div class="field view-hide-field">
                 <label>参照ステータス</label>
-                <select data-field="ref" onchange="calculateAll()">
+                <select data-field="ref" onchange="calculateAll('actions')">
                     ${options(d.ref || 'none')}
                 </select>
             </div>
 
             <div class="field view-hide-field">
                 <label>倍率</label>
-                <input type="number" step="0.1" data-field="mult" value="${E(d.mult ?? '1')}" oninput="calculateAll()">
+                <input type="number" step="0.1" data-field="mult" value="${E(d.mult ?? '1')}" oninput="calculateAll('actions')">
             </div>
 
             <div class="field view-hide-field">
@@ -292,7 +289,7 @@ function actionCard(type, d = {}) {
                     type="number"
                     data-field="add"
                     value="${E(d.add ?? '0')}"
-                    oninput="calculateAll()">
+                    oninput="calculateAll('actions')">
             </div>
 
             <div class="field">
@@ -335,8 +332,7 @@ function actionCard(type, d = {}) {
                 nameInput.value.trim() || '技の設定';
         });
     }
-
-    calculateAll();
+calculateAll('actions')
 }
             
 

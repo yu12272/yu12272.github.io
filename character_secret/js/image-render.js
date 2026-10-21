@@ -152,8 +152,7 @@ async function renderCharacterImage(forceFull = true) {
 
     if (forceFull || !characterBaseCanvas) {
 
-        calculateAll();
-
+    
         canvas.width = 1408;
         canvas.height = 1056;
 

@@ -48,7 +48,6 @@ function skillCommandBonus(category, skill) {
 }
 
 function cocofolia(){
-    calculateAll();
     let v=vals(),
     cmd=cocDiceCommand.value,
     params=[
@@ -172,9 +171,15 @@ async function outputCocofolia(){
         msg('cocofoliaMessage','生成してコピーしました。','success');
     }
     catch{
+        cocofoliaOutput.focus();
         cocofoliaOutput.select();
-        document.execCommand('copy');
-        msg('cocofoliaMessage','生成してコピーしました。','success');
+        try {
+            if (document.execCommand('copy')) {
+                msg('cocofoliaMessage','生成してコピーしました。','success');
+                return;
+            }
+        } catch {}
+        msg('cocofoliaMessage','コピーできませんでした。出力欄を手動でコピーしてください。','warning');
     }
 }
 

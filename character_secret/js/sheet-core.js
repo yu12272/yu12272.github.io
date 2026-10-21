@@ -121,9 +121,9 @@ function statName(id){
             
 
 function render(){
-    statsGrid.innerHTML=stats.map(([id,n,r])=>`<div class="field"><label>${n}</label><input id="${id}" type="number" min="0" data-save ${r?'readonly':''} oninput="${id === 'str' ? 'hp.value = (Number(this.value) || 0) + 50;' : ''}calculateAll()"></div>`).join('');
-    specialSkills.innerHTML=special.map(([id,n,b])=>`<tr><td><b>【${n}】</b></td><td><input class="mini" id="sp_${id}" type="number" min="0" data-save oninput="calculateAll()"></td><td>${b}</td><td class="calc" id="sp_${id}_total">0</td><td></td></tr>`).join('');
-    uniqueMagicOptions.innerHTML=uniqueNames.map(n=>`<label class="check-card"><input id="unique_${n}" type="checkbox" value="${n}" data-save data-unique onchange="calculateAll()">${n}</label>`).join('')
+    statsGrid.innerHTML=stats.map(([id,n,r])=>`<div class="field"><label>${n}</label><input id="${id}" type="number" min="0" data-save ${r?'readonly':''} oninput="${id === 'str' ? 'hp.value = (Number(this.value) || 0) + 50;' : ''}calculateAll('stats')"></div>`).join('');
+    specialSkills.innerHTML=special.map(([id,n,b])=>`<tr><td><b>【${n}】</b></td><td><input class="mini" id="sp_${id}" type="number" min="0" data-save oninput="calculateAll('special')"></td><td>${b}</td><td class="calc" id="sp_${id}_total">0</td><td></td></tr>`).join('');
+    uniqueMagicOptions.innerHTML=uniqueNames.map(n=>`<label class="check-card"><input id="unique_${n}" type="checkbox" value="${n}" data-save data-unique onchange="calculateAll('unique')">${n}</label>`).join('')
 }
 
 // 追加特殊技能の行を作成し、割り振り・補正ステータス・削除操作を用意します。
@@ -141,15 +141,14 @@ function addCustomSpecialSkill(skill = {}) {
         <td><button type="button" class="secondary" aria-label="追加特殊技能を削除">削除</button></td>
     `;
     row.querySelectorAll('input, select').forEach(input => {
-        input.addEventListener('input', calculateAll);
-        input.addEventListener('change', calculateAll);
+        input.addEventListener('input', () => calculateAll('special'));
     });
     row.querySelector('button').addEventListener('click', () => {
         row.remove();
-        calculateAll();
+        calculateAll('special');
     });
     specialSkills.appendChild(row);
-    calculateAll();
+    calculateAll('special');
 }
 
 
@@ -204,116 +203,149 @@ function setSkillModifier(category, skill, value){
     }
 
     skillModifiers[category][skill] = Number(value) || 0;
-    calculateAll();
+    calculateAll(category);
 }
 
 
-function calculateAll(){
-    let v=vals();
-    let total=[
-        'str',
-        'acc',
-        'agi',
-        'know',
-        'think',
-        'looks',
-        'luck'
-    ].reduce((a,x)=>a+N(x),0);manualTotal.textContent=total;
+function calculateAll(...requestedGroups) {
+    const groups = new Set();
+    if (requestedGroups.length === 0 || requestedGroups.includes('all')) {
+        ['status', 'combat', 'search', 'special', 'basic', 'unique', 'actions']
+            .forEach(group => groups.add(group));
+    } else {
+        requestedGroups.forEach(group => {
+            if (group === 'stats') {
+                ['status', 'combat', 'search', 'special', 'actions'].forEach(item => groups.add(item));
+            } else if (group === 'combat' || group === 'search' || group === 'special') {
+                groups.add(group);
+                groups.add('actions');
+            } else if (['basic', 'unique', 'actions', 'status'].includes(group)) {
+                groups.add(group);
+            }
+        });
+    }
+    if (groups.size === 0) return;
+    const value = id => document.getElementById(id)?.value ?? '';
+    const customSpecialInputs = groups.has('special')
+        ? [...document.querySelectorAll('#specialSkills [data-custom-special-skill]')]
+            .map(row => [
+                row.querySelector('[data-custom-special-allocation]')?.value ?? '',
+                row.querySelector('[data-custom-special-base]')?.value ?? ''
+            ])
+        : [];
+    const customBasicValues = groups.has('basic')
+        ? [...document.querySelectorAll('#basicMagicGrid [data-basic-magic-value]')]
+            .map(input => input.value)
+        : [];
+    let v;
+    const currentValues = () => v || (v = vals());
 
-    msg('statMessage',total>140?'合計が140を超えています。':'合計は範囲内です。',total>140?'warning':'success');
-    let c=[
-        ['拳','正確性+60'],['蹴り','正確性+30'],
-        ['回避','正確性+俊敏性、上限90'],
-        ['カウンター','正確性'],
-        ['弾き','正確性']
-    ];
+    if (groups.has('status')) {
+        const total = ['str', 'acc', 'agi', 'know', 'think', 'looks', 'luck']
+            .reduce((sum, id) => sum + (Number(value(id)) || 0), 0);
+        manualTotal.textContent = total;
+        msg(
+            'statMessage',
+            total > 140 ? '合計が140を超えています。' : '合計は範囲内です。',
+            total > 140 ? 'warning' : 'success'
+        );
+    }
 
-    combatSkills.innerHTML=c.map(x=>`
-        <tr>
-            <td><b>【${x[0]}】</b></td>
-            <td>${x[1]}</td>
-            <td>
-                <input
-                    class="mini skill-modifier"
-                    type="number"
-                    step="1"
-                    aria-label="${x[0]}の補正値"
-                    value="${Number(skillModifiers.combat[x[0]]||0)}"
-                    onchange="setSkillModifier('combat','${x[0]}',this.value)"
-                >
-            </td>
-            <td class="calc"><span class="skill-success-value">${v.combat[x[0]]}</span></td>
-        </tr>
-    `).join('');
+    if (groups.has('combat')) {
+        const current = currentValues();
+        const rows = [
+            ['拳', '正確性+60'], ['蹴り', '正確性+30'],
+            ['回避', '正確性+俊敏性、上限90'],
+            ['カウンター', '正確性'], ['弾き', '正確性']
+        ];
+        combatSkills.innerHTML = rows.map(([name, expression]) =>
+            '<tr><td><b>【' + name + '】</b></td><td>' + expression +
+            '</td><td><input class="mini skill-modifier" type="number" step="1" ' +
+            'aria-label="' + name + 'の補正値" value="' +
+            Number(skillModifiers.combat[name] || 0) +
+            '" onchange="setSkillModifier(\'combat\',\'' + name +
+            '\',this.value)"></td><td class="calc"><span class="skill-success-value">' +
+            current.combat[name] + '</span></td></tr>'
+        ).join('');
+    }
 
-    let s=[
-        ['観察','正確性+40'],
-        ['分析','思考力+30'],
-        ['幸運','ステータス'],
-        ['知識','ステータス×3'],
-        ['五感','正確性×3'],
-        ['追跡','俊敏性+正確性+幸運']
-    ];
+    if (groups.has('search')) {
+        const current = currentValues();
+        const rows = [
+            ['観察', '正確性+40'], ['分析', '思考力+30'],
+            ['幸運', 'ステータス'], ['知識', 'ステータス×3'],
+            ['五感', '正確性×3'], ['追跡', '俊敏性+正確性+幸運']
+        ];
+        searchSkills.innerHTML = rows.map(([name, expression]) =>
+            '<tr><td><b>【' + name + '】</b></td><td>' + expression +
+            '</td><td><input class="mini skill-modifier" type="number" step="1" ' +
+            'aria-label="' + name + 'の補正値" value="' +
+            Number(skillModifiers.search[name] || 0) +
+            '" onchange="setSkillModifier(\'search\',\'' + name +
+            '\',this.value)"></td><td class="calc"><span class="skill-success-value">' +
+            current.search[name] + '</span></td></tr>'
+        ).join('');
+    }
 
-    searchSkills.innerHTML=s.map(x=>`
-        <tr>
-            <td><b>【${x[0]}】</b></td>
-            <td>${x[1]}</td>
-            <td>
-                <input
-                    class="mini skill-modifier"
-                    type="number"
-                    step="1"
-                    aria-label="${x[0]}の補正値"
-                    value="${Number(skillModifiers.search[x[0]]||0)}"
-                    onchange="setSkillModifier('search','${x[0]}',this.value)"
-                >
-            </td>
-            <td class="calc"><span class="skill-success-value">${v.search[x[0]]}</span></td>
-        </tr>
-    `).join('');
+    if (groups.has('special')) {
+        const current = currentValues();
+        special.forEach(([id, name]) => {
+            document.getElementById('sp_' + id + '_total').textContent = current.special[name];
+        });
+        document.querySelectorAll('#specialSkills [data-custom-special-skill]').forEach(row => {
+            const base = row.querySelector('[data-custom-special-base]').value;
+            const baseValue = base === 'none' ? 0 : Number(current[base] ?? 0);
+            row.querySelector('[data-custom-special-total]').textContent =
+                (Number(row.querySelector('[data-custom-special-allocation]').value) || 0) + baseValue;
+        });
+        const used = special.reduce((sum, [id]) => sum + (Number(value('sp_' + id)) || 0), 0) +
+            customSpecialInputs.reduce((sum, [allocation]) => sum + (Number(allocation) || 0), 0);
+        specialUsed.textContent = used;
+        msg(
+            'specialMessage',
+            used > 100 ? '100点を超えています。' : '範囲内です。',
+            used > 100 ? 'warning' : 'success'
+        );
+    }
 
-    special.forEach(([id,n])=>document.getElementById(`sp_${id}_total`).textContent=v.special[n]);
-    document.querySelectorAll('#specialSkills [data-custom-special-skill]').forEach(row => {
-        const base = row.querySelector('[data-custom-special-base]').value;
-        row.querySelector('[data-custom-special-total]').textContent =
-            Number(row.querySelector('[data-custom-special-allocation]').value || 0) + (base === 'none' ? 0 : v[base]);
-    });
-    let used=special.reduce((a,[id])=>a+N(`sp_${id}`),0) +
-        [...document.querySelectorAll('#specialSkills [data-custom-special-allocation]')]
-            .reduce((total, input) => total + Number(input.value || 0), 0);
-    specialUsed.textContent=used;msg('specialMessage',used>100?'100点を超えています。':'範囲内です。',used>100?'warning':'success');
-    let bt = N('basicMagicTotal');
-    let bu =
-        N('heatMagic') +
-        N('bodyMagic') +
-        N('controlMagic');
+    if (groups.has('basic')) {
+        const total = Number(value('basicMagicTotal')) || 0;
+        const used = (Number(value('heatMagic')) || 0) +
+            (Number(value('bodyMagic')) || 0) +
+            (Number(value('controlMagic')) || 0) +
+            customBasicValues.reduce((sum, item) => sum + (Number(item) || 0), 0);
+        basicMagicUsed.textContent = used;
+        basicMagicTotalText.textContent = total;
+        msg(
+            'basicMagicMessage',
+            used > total ? '合計値を超えています。' :
+                used < total ? 'あと' + (total - used) + '点です。' : '一致しています。',
+            used > total ? 'warning' : used === total ? 'success' : 'note'
+        );
+    }
 
-    document.querySelectorAll('[data-basic-magic-value]').forEach(input => {
-        bu += Number(input.value || 0);
-    });
-    basicMagicUsed.textContent=bu;
-    basicMagicTotalText.textContent=bt;
-    msg('basicMagicMessage',bu>bt?'合計値を超えています。':bu<bt?`あと${bt-bu}点です。`:'一致しています。',bu>bt?'warning':bu===bt?'success':'note');
-    let uc=N('uniqueMagicCount'),ch=document.querySelectorAll('[data-unique]:checked').length;
-    uniqueMagicCountText.textContent=uc;msg('uniqueMagicMessage',ch>uc?'選択数超過です。':ch<uc?`あと${uc-ch}個です。`:'一致しています。',ch>uc?'warning':ch===uc?'success':'note');
+    if (groups.has('unique')) {
+        const count = Number(value('uniqueMagicCount')) || 0;
+        const selected = document.querySelectorAll('[data-unique]:checked').length;
+        uniqueMagicCountText.textContent = count;
+        msg(
+            'uniqueMagicMessage',
+            selected > count ? '選択数超過です。' :
+                selected < count ? 'あと' + (count - selected) + '個です。' : '一致しています。',
+            selected > count ? 'warning' : selected === count ? 'success' : 'note'
+        );
+    }
 
-    document.querySelectorAll('[data-live-total]').forEach(el => {
-        const card = el.closest('.card');
-
-        if (!card) return;
-
-        const refInput = card.querySelector('[data-field="ref"]');
-        const multInput = card.querySelector('[data-field="mult"]');
-        const addInput = card.querySelector('[data-field="add"]');
-
-        if (!refInput || !multInput || !addInput) return;
-
-        const ref = refInput.value;
-        const mult = Number(multInput.value || 1);
-        const add = Number(addInput.value || 0);
-
-        el.value = (ref === 'none' ? 0 : v[ref]) * mult + add;
-    });
+    if (groups.has('actions')) {
+        const current = currentValues();
+        document.querySelectorAll('[data-live-total]').forEach(element => {
+            const card = element.closest('.card');
+            const ref = card?.querySelector('[data-field="ref"]')?.value ?? 'none';
+            const mult = Number(card?.querySelector('[data-field="mult"]')?.value || 1);
+            const add = Number(card?.querySelector('[data-field="add"]')?.value || 0);
+            const base = ref === 'none' ? 0 : Number(current[ref] ?? 0);
+            element.value = base * mult + add;
+        });
+    }
 }
             
