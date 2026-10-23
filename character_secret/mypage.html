@@ -45,7 +45,9 @@
         <label for="sortOrder">並び替え</label>
         <select id="sortOrder">
           <option value="updated-desc">更新が新しい順</option>
+          <option value="updated-asc">更新が古い順</option>
           <option value="created-desc">作成が新しい順</option>
+          <option value="created-asc">作成が古い順</option>
           <option value="name-asc">名前順（あ→ん）</option>
           <option value="name-desc">名前順（ん→あ）</option>
         </select>
@@ -128,10 +130,10 @@
           return mode === "name-asc" ? order : -order;
         }
 
-        const field = mode === "created-desc" ? "createdAt" : "updatedAt";
+        const field = mode.startsWith("created-") ? "createdAt" : "updatedAt";
         const aTime = Date.parse(a.dataset[field]) || 0;
         const bTime = Date.parse(b.dataset[field]) || 0;
-        return bTime - aTime;
+        return mode.endsWith("-asc") ? aTime - bTime : bTime - aTime;
       });
 
       list.append(...items);
