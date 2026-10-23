@@ -21,6 +21,8 @@
     .portrait-placeholder[hidden],.portrait[hidden]{display:none}
     .actions a.secondary{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;padding:10px 16px;margin:6px;border:1px solid #cdbcff;border-radius:999px;background:#fff;color:var(--dark);font:inherit;font-weight:700;text-decoration:none;box-shadow:none}
     .item-actions{justify-content:flex-end}
+    .list-toolbar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+    .list-toolbar select{padding:8px 10px;border:1px solid #c9c1b8;border-radius:8px;background:#fff;font:inherit}
     #message{min-height:1.5em}
   </style>
 </head>
@@ -39,6 +41,15 @@
     </section>
     <section class="box">
       <h2>キャラクター一覧</h2>
+      <div class="list-toolbar">
+        <label for="sortOrder">並び替え</label>
+        <select id="sortOrder">
+          <option value="updated-desc">更新が新しい順</option>
+          <option value="created-desc">作成が新しい順</option>
+          <option value="name-asc">名前順（あ→ん）</option>
+          <option value="name-desc">名前順（ん→あ）</option>
+        </select>
+      </div>
       <ul id="list"></ul>
     </section>
   </main>
@@ -48,6 +59,7 @@
     const token = sessionStorage.getItem("magicstart_session_token");
     const msg = document.getElementById("message");
     const list = document.getElementById("list");
+    const sortOrder = document.getElementById("sortOrder");
 
     if (!token) location.replace("login.html");
     document.getElementById("user").textContent = sessionStorage.getItem("magicstart_username") || "";
@@ -106,6 +118,24 @@
       return link;
     }
 
+    function sortList() {
+      const items = [...list.children];
+      const mode = sortOrder.value;
+
+      items.sort((a, b) => {
+        if (mode === "name-asc" || mode === "name-desc") {
+          const order = a.dataset.name.localeCompare(b.dataset.name, "ja");
+          return mode === "name-asc" ? order : -order;
+        }
+
+        const field = mode === "created-desc" ? "createdAt" : "updatedAt";
+        const aTime = Date.parse(a.dataset[field]) || 0;
+        const bTime = Date.parse(b.dataset[field]) || 0;
+        return bTime - aTime;
+      });
+
+      list.append(...items);
+    }
     function buildCocofoliaCharacter(characterData) {
       const data = characterData || {};
       const number = key => Number(data[key] || 0);
@@ -260,6 +290,9 @@
         for (const character of characters) {
           const item = document.createElement("li");
           item.className = "item";
+          item.dataset.name = character.character_name || "名前なし";
+          item.dataset.createdAt = character.created_at || "";
+          item.dataset.updatedAt = character.updated_at || "";
 
           const info = document.createElement("div");
           info.className = "character-info";
@@ -315,6 +348,7 @@
           item.append(info, actions);
           list.append(item);
         }
+        sortList();
       } catch (error) {
         failed(error);
       }
@@ -351,6 +385,7 @@
 
     document.getElementById("new").onclick = createCharacter;
     document.getElementById("reload").onclick = refresh;
+    sortOrder.addEventListener("change", sortList);
     document.getElementById("logout").onclick = async () => {
       try { await call("/api/logout", { method: "POST" }); } catch {}
       sessionStorage.removeItem("magicstart_session_token");
